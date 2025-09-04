@@ -2,14 +2,14 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>CoinIMP Miner</title>
+  <title>CoinIMP Miner + XMRig Logs</title>
   <style>
     body {
       background:#0d0d0d;
       color:#eee;
-      font-family: Arial, sans-serif;
+      font-family: monospace;
       text-align: center;
-      padding: 30px;
+      padding: 20px;
     }
     canvas {
       margin-top: 20px;
@@ -18,35 +18,48 @@
       border-radius: 10px;
     }
     #currentHps, #totalHashes {
-      font-size: 24px;
-      margin-top: 20px;
+      font-size: 20px;
+      margin-top: 10px;
       color: #4caf50;
     }
+    #xmrigLogs {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: scroll;
+      background: #111;
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+      color: #ddd;
+    }
+    .logAccepted { color: #4caf50; }
+    .logRejected { color: #f44336; }
+    .logInfo { color: #00bcd4; }
   </style>
 </head>
 <body>
-  <h1>💻 CoinIMP JavaScript Miner</h1>
-
-  <h2>📊 Hashrate en temps réel</h2>
-  <div id="currentHps">0.00 H/s</div>
+  <h1>💻 CoinIMP Miner avec Logs XMRig</h1>
+  <div id="currentHps">H/s: 0.00</div>
   <div id="totalHashes">Total hashes: 0</div>
-  <canvas id="hashrateChart" width="600" height="300"></canvas>
+  <canvas id="hashrateChart" width="600" height="250"></canvas>
+  <div id="xmrigLogs"></div>
 
-  <!-- Script Chart.js -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Script CoinIMP -->
+  <!-- CoinIMP Miner Script -->
   <script src="https://www.hostingcloud.racing/WPmG.js"></script>
   <script>
-    // Démarrage du mineur
+    // Démarrage du miner
     var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
-      throttle: 0.1, 
+      throttle: 0.1,
       c: 'w'
     });
     _client.start();
     _client.addMiningNotification(
-      "Bottom", 
-      "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", 
+      "Bottom",
+      "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.",
       "#cccccc", 20, "#3d3d3d"
     );
 
@@ -71,51 +84,61 @@
         responsive: false,
         animation: false,
         scales: {
-          x: {
-            title: { display: true, text: 'Temps (s)' },
-            ticks: { color: '#aaa' }
-          },
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: 'H/s' },
-            ticks: { color: '#aaa' }
-          }
+          x: { title: { display: true, text: 'Temps (s)' }, ticks: { color: '#aaa' } },
+          y: { beginAtZero: true, title: { display: true, text: 'H/s' }, ticks: { color: '#aaa' } }
         },
-        plugins: {
-          legend: { labels: { color: '#eee' } }
-        }
+        plugins: { legend: { labels: { color: '#eee' } } }
       }
     });
 
-    // Compteurs H/s et total hashes
+    // Compteurs
     const currentHpsDisplay = document.getElementById("currentHps");
     const totalHashesDisplay = document.getElementById("totalHashes");
+    const xmrigLogs = document.getElementById("xmrigLogs");
+
     let time = 0;
+    let accepted = 0;
+    let rejected = 0;
 
     setInterval(() => {
       if (_client.isRunning()) {
         const hps = _client.getHashesPerSecond();
         const total = _client.getTotalHashes();
+        const threads = _client.getNumThreads();
 
-        // Mettre à jour les compteurs
-        currentHpsDisplay.textContent = hps.toFixed(2) + " H/s";
+        currentHpsDisplay.textContent = "H/s: " + hps.toFixed(2);
         totalHashesDisplay.textContent = "Total hashes: " + total;
 
-        // Ajouter au graphe
+        // Graphe H/s
         hashrateChart.data.labels.push(time + "s");
         hashrateChart.data.datasets[0].data.push(hps);
-
-        // Garde seulement les 20 derniers points
         if (hashrateChart.data.labels.length > 20) {
           hashrateChart.data.labels.shift();
           hashrateChart.data.datasets[0].data.shift();
         }
-
         hashrateChart.update();
+
+        // Logs XMRig simulés
+        for (let i = 0; i < threads; i++) {
+          const coreHps = (hps / threads * (0.9 + Math.random() * 0.2)).toFixed(2);
+          const isAccepted = Math.random() > 0.05; // 95% accepted
+          const logLine = `[${new Date().toLocaleTimeString()}] Core #${i} ${coreHps} H/s | ${isAccepted ? 'Accepted' : 'Rejected'}`;
+          const span = document.createElement("span");
+          span.className = isAccepted ? "logAccepted" : "logRejected";
+          span.textContent = logLine;
+          xmrigLogs.appendChild(span);
+          xmrigLogs.appendChild(document.createElement("br"));
+          if (isAccepted) accepted++; else rejected++;
+        }
+
+        // Scroll vers le bas
+        xmrigLogs.scrollTop = xmrigLogs.scrollHeight;
+
         time++;
       }
-    }, 1000); // mise à jour chaque seconde
+    }, 1000);
   </script>
 </body>
 </html>
+
 
