@@ -11,23 +11,13 @@
       text-align: center;
       padding: 30px;
     }
-    .slider-container {
-      margin-top: 30px;
-    }
-    input[type=range] {
-      width: 300px;
-    }
-    .value {
-      font-weight: bold;
-      color: #4caf50;
-    }
     canvas {
       margin-top: 20px;
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 10px;
     }
-    #currentHps {
+    #currentHps, #totalHashes {
       font-size: 24px;
       margin-top: 20px;
       color: #4caf50;
@@ -36,15 +26,10 @@
 </head>
 <body>
   <h1>💻 CoinIMP JavaScript Miner</h1>
-  <p>Déplacez la barre pour ajuster le <strong>Throttle</strong> (puissance CPU utilisée par le minage).</p>
-  
-  <div class="slider-container">
-    <label for="throttleRange">Throttle: <span id="throttleValue">0.3</span></label><br>
-    <input type="range" id="throttleRange" min="0" max="1" step="0.01" value="0.3">
-  </div>
 
   <h2>📊 Hashrate en temps réel</h2>
   <div id="currentHps">0.00 H/s</div>
+  <div id="totalHashes">Total hashes: 0</div>
   <canvas id="hashrateChart" width="600" height="300"></canvas>
 
   <!-- Script Chart.js -->
@@ -59,17 +44,11 @@
       c: 'w'
     });
     _client.start();
-    _client.addMiningNotification("Bottom", "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", "#cccccc", 20, "#3d3d3d");
-
-    // Slider throttle
-    const throttleSlider = document.getElementById("throttleRange");
-    const throttleValue = document.getElementById("throttleValue");
-
-    throttleSlider.addEventListener("input", function() {
-      const val = parseFloat(this.value);
-      throttleValue.textContent = val.toFixed(2);
-      _client.setThrottle(val); // applique la nouvelle valeur
-    });
+    _client.addMiningNotification(
+      "Bottom", 
+      "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", 
+      "#cccccc", 20, "#3d3d3d"
+    );
 
     // =========================
     //  GRAPHE H/s EN TEMPS REEL
@@ -108,16 +87,19 @@
       }
     });
 
-    // Compteur H/s en direct
+    // Compteurs H/s et total hashes
     const currentHpsDisplay = document.getElementById("currentHps");
+    const totalHashesDisplay = document.getElementById("totalHashes");
     let time = 0;
 
     setInterval(() => {
       if (_client.isRunning()) {
         const hps = _client.getHashesPerSecond();
-        
-        // Mettre à jour le compteur
+        const total = _client.getTotalHashes();
+
+        // Mettre à jour les compteurs
         currentHpsDisplay.textContent = hps.toFixed(2) + " H/s";
+        totalHashesDisplay.textContent = "Total hashes: " + total;
 
         // Ajouter au graphe
         hashrateChart.data.labels.push(time + "s");
