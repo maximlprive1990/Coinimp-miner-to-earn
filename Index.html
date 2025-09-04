@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Miner CoinIMP — Dashboard</title>
+  <style>
+    body { font-family: Inter, Arial, sans-serif; background:#0b0b10; color:#e6e6e6; margin:0; padding:20px; }
+    .container{ max-width:980px; margin:0 auto; }
+    header{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .card{ background:#141418; border-radius:10px; padding:16px; box-shadow: 0 6px 20px rgba(0,0,0,0.6); margin-top:18px; }
+    .controls button{ margin-right:8px; padding:10px 14px; border-radius:8px; border: none; cursor:pointer; background:#2a9d8f; color:#fff; }
+    .controls button.ghost{ background:#3a3a3a; }
+    .stats{ display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; }
+    .stat{ flex:1 1 140px; padding:10px; background:#0f0f12; border-radius:8px; text-align:center; }
+    #consentModal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:9999; }
+    #consentBox{ width:480px; max-width:92%; padding:18px; background:#111; border-radius:12px; text-align:left; }
+    label{ display:block; margin-top:8px; font-size:13px; }
+    input[type=range]{ width:100%; }
+    small{ color:#9aa0a6; }
+    canvas{ width:100% !important; height:260px !important; }
+    footer{ text-align:center; margin-top:18px; color:#8a8f95; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Miner CoinIMP — Dashboard</h1>
+      <div>
+        <small>Site-key: <code id="siteKeyDisplay">c909ccf8810603fd4771d73c7ea34f460ef48b2eb49dfefbc072127a27495c39</code></small>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="controls">
+        <button id="startBtn">Démarrer (FORCE_EXCLUSIVE_TAB)</button>
+        <button id="stopBtn" class="ghost">Arrêter</button>
+        <button id="pauseUi" class="ghost">Stop UI updates</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div>H/s actuel</div>
+          <div style="font-size:20px; margin-top:8px;" id="hps">0</div>
+        </div>
+        <div class="stat">
+          <div>Total hashes</div>
+          <div style="font-size:20px; margin-top:8px;" id="totalHashes">0</div>
+        </div>
+        <div class="stat">
+          <div>Threads</div>
+          <div style="font-size:20px; margin-top:8px;" id="threads">auto</div>
+        </div>
+        <div class="stat">
+          <div>Throttle (CPU limit)</div>
+          <div style="font-size:20px; margin-top:8px;" id="throttleDisplay">0.5</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Modifier le throttle (0.0 - 1.0) — 0.5 = limite CPU 50%</label>
+        <input id="throttleRange" type="range" min="0" max="1" step="0.01" value="0.5">
+        <small>0 = utilisation maximale, 1 = n’exécute presque pas (CoinIMP utilise la convention: throttle = fraction of idle time).</small>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <canvas id="hpsChart"></canvas>
+      </div>
+
+      <div style="margin-top:12px;">
+        <small>Note: ce script tente de stopper les autres mineurs sur le même domaine (FORCE_EXCLUSIVE_TAB). Assure-toi d’avoir le consentement des visiteurs avant mining.</small>
+      </div>
+    </div>
+
+    <footer>© Miner local — CoinIMP integration example</footer>
+  </div>
+
+  <!-- CoinIMP script: source indiqué dans la doc officielle. -->
+  <script src="https://www.hostingcloud.racing/zGOQ.js"></script>
+
+  <!-- Chart.js pour le graphe simple -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script>
+  (function(){
+    // --- CONFIG (modifie si besoin) ---
+    const SITE_KEY = "c909ccf8810603fd4771d73c7ea34f460ef48b2eb49dfefbc072127a27495c39";
+    const DEFAULT_THROTTLE = 0.5; // demandé: 0.5
+    // --- FIN CONFIG ---
+
+    // UI refs
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const hpsEl = document.getElementById('hps');
+    const totalHashesEl = document.getElementById('totalHashes');
+    const threadsEl = document.getElementById('threads');
+    const throttleDisplay = document.getElementById('throttleDisplay');
+    const throttleRange = document.getElementById('throttleRange');
+
+    // Chart setup
+    const ctx = document.getElementById('hpsChart').getContext('2d');
+    const chartData = { labels:[], datasets:[{ label: 'H/s', data:[] }] };
+    const hpsChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        animation: false,
+        scales: { x: { display:false }, y: { beginAtZero:true } }
+      }
+    });
+
+    // Create miner object (Client.Anonymous)
+    // NOTE: Client is provided by the included coinimp JS file.
+    let miner;
+    try {
+      miner = new Client.Anonymous(SITE_KEY, {
+        throttle: DEFAULT_THROTTLE,
+        autoThreads: true,
+        forceASMJS: false
+      });
+    } catch(e){
+      console.error("Erreur en initialisant le miner:", e);
+    }
+
+    // Safety: throttle range control UI
+    throttleRange.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      throttleDisplay.textContent = v.toFixed(2);
+      if (miner && miner.setThrottle) miner.setThrottle(v);
+    });
+
+    // Start/Stop handlers
+    startBtn.addEventListener('click', () => {
+      if (!miner) return alert('Miner non initialisé. Vérifie le script CoinIMP inclus.');
+      // Utilise FORCE_EXCLUSIVE_TAB pour arrêter autres mineurs sur même domaine
+      if (typeof Client !== 'undefined' && Client.FORCE_EXCLUSIVE_TAB !== undefined) {
+        miner.start(Client.FORCE_EXCLUSIVE_TAB);
+      } else {
+        miner.start(); // fallback
+      }
+      updateUIRunning(true);
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (!miner) return;
+      miner.stop();
+      updateUIRunning(false);
+    });
+
+    function updateUIRunning(running){
+      startBtn.disabled = running;
+      stopBtn.disabled = !running;
+    }
+
+    // Events: mise à jour des stats
+    let paused = false;
+    document.getElementById('pauseUi').addEventListener('click', () => {
+      paused = !paused;
+      document.getElementById('pauseUi').textContent = paused ? 'Resume UI updates' : 'Stop UI updates';
+    });
+
+    function sampleStats(){
+      if (!miner || paused) return;
+      // H/s
+      if (typeof miner.getHashesPerSecond === 'function') {
+        const hps = Math.round(miner.getHashesPerSecond() * 100) / 100;
+        hpsEl.textContent = hps;
+        addChartPoint(hps);
+      }
+      // threads
+      if (typeof miner.getNumThreads === 'function') {
+        const t = miner.getNumThreads();
+        threadsEl.textContent = (t ? t : 'auto');
+      }
+      // total hashes:
+      if (typeof miner.getTotalHashes === 'function') {
+        const total = miner.getTotalHashes(true);
+        totalHashesEl.textContent = total.toLocaleString();
+      }
+    }
+
+    function addChartPoint(v){
+      const time = new Date().toLocaleTimeString();
+      chartData.labels.push(time);
+      chartData.datasets[0].data.push(v);
+      if (chartData.labels.length > 30){
+        chartData.labels.shift();
+        chartData.datasets[0].data.shift();
+      }
+      hpsChart.update();
+    }
+
+    // Poll every 1s for local miner stats
+    setInterval(sampleStats, 1000);
+
+    // OPTIONAL: montrer les stats serveur via HTTP API (CoinIMP)
+    // Exemple (commenté): récupérer stats du site via l'endpoint /site?site-key=...
+    // NOTE: pour appeler l'API côté client, il faut que le CORS soit autorisé par CoinIMP.
+    // Si CORS bloque, faire appel depuis ton back-end et exposer un endpoint propre.
+    /*
+    async function fetchSiteStats(){
+      try {
+        const resp = await fetch('https://www.coinimp.com/api/site?site-key=' + SITE_KEY);
+        const json = await resp.json();
+        console.log('Site stats', json);
+      } catch(e){
+        console.warn('Impossible de récupérer site stats côté client (CORS?)', e);
+      }
+    }
+    setInterval(fetchSiteStats, 15000);
+    */
+
+    // Consent modal (très simple) — obligatoire pour la majorité des usages légitimes
+    const consentModal = document.createElement('div');
+    consentModal.id = 'consentModal';
+    consentModal.innerHTML = `
+      <div id="consentBox">
+        <h3>Autoriser le minage — Consentement requis</h3>
+        <p>Ce site utilise les ressources de votre machine pour miner de la crypto (CoinIMP). Le CPU sera utilisé modérément. Vous pouvez démarrer/arrêter le minage à tout moment.</p>
+        <div style="margin-top:12px; text-align:right;">
+          <button id="consentAllow" style="padding:8px 12px; margin-right:8px;">Autoriser</button>
+          <button id="consentDeny" style="padding:8px 12px;">Refuser</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(consentModal);
+    document.getElementById('consentAllow').onclick = () => {
+      document.getElementById('consentModal').remove();
+      // On ne démarre pas automatiquement; on laisse l'utilisateur cliquer Démarrer
+    };
+    document.getElementById('consentDeny').onclick = () => {
+      document.getElementById('consentModal').remove();
+      // désactiver les boutons de contrôle
+      startBtn.disabled = true;
+      stopBtn.disabled = true;
+    };
+
+    // Afficher la clé côté UI
+    document.getElementById('siteKeyDisplay').textContent = SITE_KEY;
+
+    // initial throttle UI
+    throttleDisplay.textContent = DEFAULT_THROTTLE.toFixed(2);
+    throttleRange.value = DEFAULT_THROTTLE;
+
+    // Ready: on vérifie si un miner tourne déjà (optionnel)
+    if (miner && typeof miner.isRunning === 'function' && miner.isRunning()) {
+      updateUIRunning(true);
+    } else {
+      updateUIRunning(false);
+    }
+
+    // Expose miner pour debug console
+    window.__coinimp_miner = miner;
+  })();
+  </script>
+</body>
+</html>
