@@ -96,10 +96,135 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infi
     <div id="stakedInfo">Total staké : 0 TON</div>
     <div id="stakingBonus">Bonus reçu : 0 DSC</div>
     <button id="verifyDepositBtn">✅ Vérifier Dépôt</button>
-    <button id="withdrawBtn">📤 Retirer mes TON</button>
-    <button id="convertBonusBtn">💎 Convertir Bonus → Deadspot</button>
-    <div id="stakeHistory"></div>
+  <!-- BOUTON RETRAIT -->
+<button id="withdrawBtn">💸 Retirer TON Staked</button>
+
+<!-- POPUP FORMULAIRE RETRAIT -->
+<div id="withdrawPopup" class="popup">
+  <div class="popup-content">
+    <span class="close">&times;</span>
+    <h2>Demande de Retrait</h2>
+    <form id="withdrawForm">
+      <label>Adresse Wallet TON :</label>
+      <input type="text" id="tonWallet" required>
+
+      <label>Montant à retirer (TON) :</label>
+      <input type="number" id="withdrawAmount" min="1.50" step="0.01" required>
+
+      <label>Email FaucetPay :</label>
+      <input type="email" id="faucetpayEmail" required>
+
+      <p style="font-size:12px;color:#aaa;">
+        ⚠️ Des frais fixes de 0.2 TON seront déduits de chaque retrait.
+      </p>
+      <button type="submit">Confirmer Retrait</button>
+    </form>
   </div>
+</div>
+
+<style>
+/* Style bouton */
+#withdrawBtn {
+  padding:10px 20px;
+  background:#ff4444;
+  color:#fff;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+/* Popup */
+.popup {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+.popup-content {
+  background:#111;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+  color:#fff;
+  box-shadow:0 0 15px #00bcd4;
+}
+.popup-content h2 {
+  margin-top:0;
+  text-align:center;
+}
+.popup-content input {
+  width:100%;
+  padding:8px;
+  margin:6px 0;
+  border:none;
+  border-radius:5px;
+}
+.popup-content button {
+  width:100%;
+  padding:10px;
+  background:#00bcd4;
+  border:none;
+  border-radius:5px;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+.close {
+  position:absolute;
+  top:15px;
+  right:20px;
+  font-size:24px;
+  cursor:pointer;
+}
+</style>
+
+<script>
+// Ouvrir/fermer le popup
+const withdrawBtn = document.getElementById("withdrawBtn");
+const popup = document.getElementById("withdrawPopup");
+const closeBtn = document.querySelector(".close");
+
+withdrawBtn.onclick = () => popup.style.display = "flex";
+closeBtn.onclick = () => popup.style.display = "none";
+window.onclick = (e) => { if (e.target === popup) popup.style.display = "none"; }
+
+// Gérer le formulaire
+document.getElementById("withdrawForm").addEventListener("submit", function(e){
+  e.preventDefault();
+
+  let wallet = document.getElementById("tonWallet").value;
+  let amount = parseFloat(document.getElementById("withdrawAmount").value);
+  let email = document.getElementById("faucetpayEmail").value;
+
+  if(amount < 1.5){
+    alert("Le montant minimum de retrait est 1.50 TON !");
+    return;
+  }
+
+  let finalAmount = (amount - 0.2).toFixed(2);
+
+  // Sauvegarde en localStorage (pour test)
+  let withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
+  withdrawals.push({wallet, amount, finalAmount, email, date:new Date().toLocaleString()});
+  localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
+
+  alert(`✅ Demande de retrait enregistrée !
+Montant demandé : ${amount} TON
+Frais : 0.2 TON
+Montant net : ${finalAmount} TON
+Wallet : ${wallet}
+Email FaucetPay : ${email}`);
+
+  popup.style.display = "none";
+  this.reset();
+});
+</script>
+
 
   <canvas id="hashrateChart" width="400" height="200"></canvas>
 
