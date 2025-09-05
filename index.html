@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Deadspot Miner + Clicker + NFT</title>
+<title>Deadspot Miner + Clicker</title>
 <style>
 body {
   background:#0d0d0d;
@@ -56,14 +56,6 @@ h1 { color:#4caf50; text-align:center; margin-top:10px; }
 }
 #pulseInfo, #stakedInfo{margin:5px; color:#fff;}
 
-/* NFT */
-#nftSection{
-  position:absolute; bottom:150px; left:50%; transform:translateX(-50%);
-  width:450px; background:rgba(0,0,0,0.6); padding:10px; border-radius:10px; display:none;
-}
-#nftSection h4{color:#fff; margin:5px 0;}
-#nftActive, #nftSimple{display:flex; flex-wrap:wrap;}
-
 /* Chat */
 #chatSection{
   position:absolute; bottom:10px; right:10px; width:250px; height:300px; background:rgba(0,0,0,0.6);
@@ -95,14 +87,6 @@ h1 { color:#4caf50; text-align:center; margin-top:10px; }
   <button id="verifyDepositBtn">🔍 Vérifier dépôt</button>
 </div>
 
-<div id="nftSection">
-  <h3 style="color:#ff69b4;">🎰 NFT Roulette</h3>
-  <p id="nftAccessMsg">Vous devez avoir cliqué 500 000 fois et accumulé 100 M hashes pour accéder.</p>
-  <button id="spinNFTBtn">🔄 Tourner la roue (100 M Hashes + 1 TON)</button>
-  <h4>Inventaire NFT actif</h4><div id="nftActive"></div>
-  <h4>Inventaire NFT simple</h4><div id="nftSimple"></div>
-</div>
-
 <div id="chatSection">
   <div id="chatLogs"></div>
   <input type="text" id="chatInput" placeholder="Votre message..."/>
@@ -119,25 +103,18 @@ const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // Variables
 let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
-let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
 let energy = 100, maxEnergy=100, regenRate=1;
 let clickValue=0.0015;
-let autoClickInterval=null;
 let totalClicks=parseInt(localStorage.getItem("totalClicks"))||0;
 let totalHashes=0;
 let stakedTON = parseFloat(localStorage.getItem("stakedTON"))||0;
 let pulseBonus=0;
-let nftInventoryActive=JSON.parse(localStorage.getItem("nftInventoryActive"))||[];
-let nftInventorySimple=JSON.parse(localStorage.getItem("nftInventorySimple"))||[];
 
 // Save
 function saveGame(){
   localStorage.setItem("deadspot",deadspot);
-  localStorage.setItem("upgrades",JSON.stringify(upgrades));
   localStorage.setItem("totalClicks",totalClicks);
   localStorage.setItem("stakedTON",stakedTON);
-  localStorage.setItem("nftInventoryActive",JSON.stringify(nftInventoryActive));
-  localStorage.setItem("nftInventorySimple",JSON.stringify(nftInventorySimple));
 }
 
 // Update UI
@@ -151,10 +128,8 @@ function updateUI(){
 // Click bouton
 document.getElementById("clickBtn").addEventListener("click",()=>{
   if(energy>0){
-    let gain=clickValue;
-    if(upgrades.x2) gain*=2;
-    if(upgrades.multi) gain*=5;
-    deadspot+=gain; energy--; totalClicks++;
+    deadspot+=clickValue;
+    energy--; totalClicks++;
     updateUI(); saveGame();
   }
 });
@@ -202,83 +177,81 @@ setInterval(()=>{
       xmrigLogs.appendChild(document.createElement("br"));
       xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
     }
-    time++;
-    updateUI();
-  }
+    time
+++;
+updateUI();
+}
 },1000);
 
-// Faucet
+// Faucet claim simple
 function faucetClaim(){
-  let claim = 0.0002 + Math.random()*(0.1-0.0002);
-  deadspot+=claim;
-  updateUI(); saveGame();
-  alert(`Vous avez reçu ${claim.toFixed(5)} DSC du faucet !`);
+let claim = 0.0002 + Math.random()*(0.1-0.0002);
+deadspot += claim;
+alert(Vous avez reçu ${claim.toFixed(5)} DSC du faucet !);
+updateUI();
+saveGame();
 }
 
 // Staking
 document.getElementById("stakeBtn").addEventListener("click",()=>{
-  let amount=parseFloat(prompt("Combien de TON voulez-vous staker ? (min 1.5 TON)"));
-  if(amount>=1.5 && amount<=deadspot){ deadspot-=amount; stakedTON+=amount; saveGame(); updateUI(); } else alert("Montant invalide.");
-});
-document.getElementById("unstakeBtn").addEventListener("click",()=>{
-  if(stakedTON>=1.5){ stakedTON-=0.2; deadspot+=stakedTON; saveGame(); updateUI(); alert("Retrait effectué, frais 0.2 TON"); } else alert("Montant insuffisant pour retrait."); 
+let amount = prompt("Combien de TON voulez-vous staker ? (min 1.5 TON)");
+amount = parseFloat(amount);
+if(amount >= 1.5 && amount <= deadspot){
+deadspot -= amount;
+stakedTON += amount;
+saveGame();
+updateUI();
+} else {
+alert("Montant invalide.");
+}
 });
 
-// NFT Roulette
-function updateNFTUI(){
-  const activeDiv=document.getElementById("nftActive");
-  const simpleDiv=document.getElementById("nftSimple");
-  activeDiv.innerHTML=""; simpleDiv.innerHTML="";
-  nftInventoryActive.forEach(nft=>{
-    let el=document.createElement("div");
-    el.style.border="1px solid #f0f"; el.style.margin="3px"; el.style.padding="3px";
-    el.textContent=`${nft.name} (${nft.value} TON)`; activeDiv.appendChild(el);
-  });
-  nftInventorySimple.forEach(nft=>{
-    let el=document.createElement("div");
-    el.style.border="1px solid #888"; el.style.margin="3px"; el.style.padding="3px";
-    el.textContent=`${nft.name} (${nft.value} TON)`; simpleDiv.appendChild(el);
-  });
+document.getElementById("unstakeBtn").addEventListener("click",()=>{
+if(stakedTON >= 1.5){
+stakedTON -= 0.2; // frais de retrait
+deadspot += (stakedTON);
+saveGame();
+updateUI();
+alert("Retrait effectué, frais 0.2 TON déduits");
+} else {
+alert("Montant insuffisant pour retrait.");
 }
-document.getElementById("spinNFTBtn").addEventListener("click",()=>{
-  if(totalClicks<500000 || totalHashes<100000000){ alert("Pas encore accès à la roulette NFT."); return; }
-  if(deadspot<1){ alert("1 TON requis pour mint."); return; }
-  deadspot-=1;
-  let nftValue=(Math.random()*177.8+0.2).toFixed(3);
-  const nftName="NFT#"+Math.floor(Math.random()*1000000);
-  const nft={name:nftName,value:parseFloat(nftValue)};
-  if(Math.random()<0.5 && deadspot>=0.25){ deadspot-=0.25; nftInventoryActive.push(nft); alert(`${nftName} minté et activé!`);}
-  else{ nftInventorySimple.push(nft); alert(`${nftName} minté en simple.`);}
-  saveGame(); updateNFTUI(); updateUI();
 });
-updateNFTUI();
+
+// Vérification dépôt (placeholder)
+document.getElementById("verifyDepositBtn").addEventListener("click",()=>{
+alert("Vérification des dépôts en cours... (simulé)");
+});
 
 // Chat Supabase
-const chatLogs=document.getElementById("chatLogs");
-const chatInput=document.getElementById("chatInput");
-chatInput.addEventListener("keypress",async(e)=>{
-  if(e.key==="Enter"){
-    const message=chatInput.value; if(message.trim()==="") return;
-    chatInput.value="";
-    await supabase.from("chat").insert([{username:"Player", message}]);
-    fetchChat();
-  }
+const chatLogs = document.getElementById("chatLogs");
+const chatInput = document.getElementById("chatInput");
+
+chatInput.addEventListener("keypress", async (e)=>{
+if(e.key === "Enter"){
+const message = chatInput.value.trim();
+if(message === "") return;
+chatInput.value = "";
+await supabase.from("chat").insert([{username:"Player", message}]);
+fetchChat();
+}
 });
+
 async function fetchChat(){
-  const {data}=await supabase.from("chat").select("*").order("id",{ascending:true});
-  chatLogs.innerHTML="";
-  data.forEach(msg=>{
-    let div=document.createElement("div");
-    div.textContent=`${msg.username}: ${msg.message}`;
-    chatLogs.appendChild(div);
-  });
+const {data} = await supabase.from("chat").select("*").order("id",{ascending:true});
+chatLogs.innerHTML = "";
+data.forEach(msg=>{
+let div = document.createElement("div");
+div.textContent = ${msg.username}: ${msg.message};
+chatLogs.appendChild(div);
+});
 }
 fetchChat();
 setInterval(fetchChat,3000);
 
+// Initial UI update
 updateUI();
 </script>
-</body>
-</html>
 
+</body> </html> ```
 
