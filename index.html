@@ -207,20 +207,38 @@ const deadspotValueLogs = document.getElementById("deadspotValueLogs");
 let deadspotLastValue = deadspot;
 
 setInterval(()=>{
-  let threads=4;
-  hashesPerSecond=Math.random()*50+50;
-  totalHashes+=hashesPerSecond;
-  for(let i=0;i<threads;i++){
-    let coreHps=(hashesPerSecond/threads*(0.9+Math.random()*0.2)).toFixed(2);
-    let isAccepted=Math.random()>0.05;
-    let line=`[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
-    let span=document.createElement("span");
-    span.className=isAccepted?"logAccepted":"logRejected";
-    span.textContent=line;
-    xmrigLogs.appendChild(span);
-    xmrigLogs.appendChild(document.createElement("br"));
-    xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
+const xmrigLogs=document.getElementById("xmrigLogsBox");
+
+function addXmrigLog(){
+  if(!xmrigLogs) return; // sécurité
+  const threads = 4;
+  hashesPerSecond = Math.random()*50+50;
+  totalHashes += hashesPerSecond;
+
+  let fragment = document.createDocumentFragment(); // moins lourd
+  for(let i=0; i<threads; i++){
+    let coreHps = (hashesPerSecond/threads*(0.9+Math.random()*0.2)).toFixed(2);
+    let isAccepted = Math.random()>0.05;
+    let line = `[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
+    let span = document.createElement("span");
+    span.className = isAccepted?"logAccepted":"logRejected";
+    span.textContent = line;
+    fragment.appendChild(span);
+    fragment.appendChild(document.createElement("br"));
   }
+
+  xmrigLogs.appendChild(fragment);
+
+  // Limiter le nombre de lignes pour pas saturer le DOM
+  while(xmrigLogs.children.length > 1000){
+    xmrigLogs.removeChild(xmrigLogs.firstChild);
+  }
+  xmrigLogs.scrollTop = xmrigLogs.scrollHeight;
+}
+
+// appel toutes les secondes
+setInterval(addXmrigLog, 1000);
+
 
   /* Deadspot value log simulation */
   let preListing = 1.00;
