@@ -12,7 +12,6 @@
       text-align: center;
     }
 
-    /* Fond cosmique avec dégradé */
     body::before {
       content: "";
       position: fixed;
@@ -21,7 +20,6 @@
       z-index: -3;
     }
 
-    /* Étoiles filantes */
     .star {
       position: fixed;
       background: white;
@@ -36,7 +34,6 @@
       to { transform: translateY(110vh) translateX(-50vw); opacity: 0; }
     }
 
-    /* Vaisseaux */
     .ship {
       position: fixed;
       top: 20%;
@@ -53,16 +50,17 @@
 
     h1 { color:#00ffea; margin-top:20px; }
     #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
+
     #energyBar {
-      width: 300px; height: 20px; border:1px solid #444; margin:10px auto;
+      width: 400px; height: 25px; border:1px solid #444; margin:10px auto;
       background:#111; border-radius:5px; overflow:hidden;
     }
     #energyFill { height:100%; width:100%; background:#00ffea; }
 
     /* Bouton clicker */
     #clickBtn {
-      width: 200px;
-      height: 200px;
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
       background: radial-gradient(circle, #111, #000);
       border: 3px solid #00ffea;
@@ -76,6 +74,16 @@
     #clickBtn img { width: 100%; height: 100%; object-fit: cover; }
     #clickBtn:hover { transform: scale(1.08); border-color: #ff0055; box-shadow: 0 0 35px #ff0055; }
 
+    /* Animation scintillante quand on clique */
+    #clickBtn.flash {
+      animation: flashAnim 0.4s ease;
+    }
+    @keyframes flashAnim {
+      0% { box-shadow: 0 0 25px #00ffea; }
+      50% { box-shadow: 0 0 60px #ff0055, 0 0 120px #ffff00; }
+      100% { box-shadow: 0 0 25px #00ffea; }
+    }
+
     button {
       background:#222; color:#eee; padding:10px 20px; border:none;
       border-radius:5px; margin:5px; cursor:pointer; box-shadow: 0 0 10px #00ffea;
@@ -87,16 +95,17 @@
       border: 1px solid #333; border-radius: 10px;
     }
 
+    /* Box XMRig agrandie */
     #xmrigLogs {
       margin:20px auto;
-      max-height:250px;
+      max-height:400px;
       overflow-y:auto;
-      background:rgba(5,5,10,0.8);
+      background:rgba(5,5,10,0.85);
       border:1px solid #444;
       padding:10px;
       text-align:left;
-      font-size:13px;
-      width:80%;
+      font-size:14px;
+      width:90%;
     }
     .logAccepted { color:#00ffea; }
     .logRejected { color:#ff0055; }
@@ -117,7 +126,10 @@
   <div id="deadspotBalance">Deadspot: 0</div>
   <div id="energyBar"><div id="energyFill"></div></div>
 
-  <div id="clickBtn"><img src="skull.png" alt="skull"></div>
+  <div id="clickBtn">
+  <img src="https://cdn-icons-png.flaticon.com/512/3917/3917744.png" alt="skull">
+  </div>
+
   <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
   <div id="exchangeProgress"><div id="exchangeFill"></div></div>
 
@@ -146,7 +158,7 @@
   <script>
     let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
     let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
-    let energy = 100, maxEnergy = 100;
+    let energy = 500, maxEnergy = 500; // 🚀 plus d’énergie
     let regenRate = 1;
     let clickValue = 0.00015;
     let autoClickInterval = null;
@@ -164,13 +176,19 @@
       document.getElementById("exchangeFill").style.width = percent+"%";
     }
 
-    document.getElementById("clickBtn").addEventListener("click", () => {
+    const clickBtn = document.getElementById("clickBtn");
+    clickBtn.addEventListener("click", () => {
       if (energy > 0) {
         let gain = clickValue;
         if (upgrades.x2) gain *= 2;
         if (upgrades.multi) gain *= 5;
         deadspot += gain;
         energy--;
+
+        // animation scintillante
+        clickBtn.classList.add("flash");
+        setTimeout(()=> clickBtn.classList.remove("flash"), 400);
+
         updateUI(); saveGame();
       }
     });
@@ -271,7 +289,7 @@
     if(upgrades.regen) regenRate=2;
     updateUI();
 
-    // Génération d'étoiles filantes
+    // étoiles filantes
     setInterval(() => {
       const star = document.createElement("div");
       star.className = "star";
@@ -281,7 +299,7 @@
       setTimeout(()=>star.remove(), 5000);
     }, 300);
 
-    // Ajout d'un vaisseau
+    // vaisseaux
     setInterval(() => {
       const ship = document.createElement("div");
       ship.className = "ship";
