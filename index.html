@@ -2,91 +2,153 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Deadspot Miner + Clicker</title>
+  <title>🚀 Deadspot Galactic Miner</title>
   <style>
     body {
-      background:#0d0d0d;
-      color:#eee;
-      font-family: monospace;
+      margin: 0;
+      overflow: hidden;
+      font-family: Consolas, monospace;
+      background: black;
+      color: #0ff;
       text-align: center;
-      padding: 20px;
     }
-    h1 { color:#4caf50; }
-    #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
-    #energyBar {
-      width: 300px; height: 20px; border:1px solid #444; margin:10px auto;
-      background:#222; border-radius:5px; overflow:hidden;
-    }
-    #energyFill { height:100%; width:100%; background:#4caf50; }
 
-    /* Bouton clicker personnalisé */
+    h1 {
+      color: #0ff;
+      margin-top: 20px;
+      text-shadow: 0 0 15px #0ff, 0 0 30px cyan;
+    }
+
+    #deadspotBalance {
+      font-size: 22px;
+      margin: 10px;
+      color: #ffd700;
+      text-shadow: 0 0 10px #ff0;
+    }
+
+    #energyBar {
+      width: 300px; height: 20px; border:1px solid #0ff; margin:10px auto;
+      background:#001; border-radius:5px; overflow:hidden;
+    }
+    #energyFill {
+      height:100%; width:100%; background:#0ff;
+      transition: width 0.3s;
+    }
+
+    /* Bouton futuriste */
     #clickBtn {
-      width: 200px;
-      height: 200px;
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
-      background: #111;
-      border: 3px solid #444;
+      background: radial-gradient(circle, #111, #000);
+      border: 3px solid #0ff;
       margin: 20px auto;
       cursor: pointer;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 0 25px #0ff;
+      transition: transform 0.2s;
     }
     #clickBtn img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      filter: drop-shadow(0 0 20px #f00);
     }
     #clickBtn:hover {
-      transform: scale(1.05);
-      border-color: #f00;
+      transform: scale(1.08);
+      border-color: #ff0;
     }
 
     button {
-      background:#333; color:#eee; padding:10px 20px; border:none;
-      border-radius:5px; margin:5px; cursor:pointer;
+      background:#111; color:#0ff; padding:10px 20px; border:1px solid #0ff;
+      border-radius:8px; margin:5px; cursor:pointer;
+      text-shadow: 0 0 8px #0ff;
     }
-    button:hover { background:#555; }
+    button:hover { background:#033; }
 
     canvas {
-      margin-top: 20px; background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
+      margin-top: 20px;
+      background: #0a0a1a;
+      border: 1px solid #0ff;
+      border-radius: 10px;
     }
-    #xmrigLogs {
-      margin-top:20px; max-height:250px; overflow-y:auto; background:#111;
-      border:1px solid #444; padding:10px; text-align:left; font-size:13px;
-    }
-    .logAccepted { color:#4caf50; }
-    .logRejected { color:#f44336; }
 
-    /* Progression échange */
-    #exchangeProgress {
-      width: 300px;
-      height: 20px;
-      border: 1px solid #444;
-      background: #222;
-      border-radius: 5px;
-      margin: 10px auto;
-      overflow: hidden;
+    #xmrigLogs {
+      margin: 20px auto;
+      max-height: 250px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid #0ff;
+      padding: 10px;
+      width: 80%;
+      text-align: left;
+      font-size: 13px;
+      color: #0f0;
     }
-    #exchangeFill {
-      height: 100%;
-      width: 0%;
-      background: #ff0000;
+    .logAccepted { color:#0f0; }
+    .logRejected { color:#f00; }
+
+    /* Effet LEVEL UP */
+    #levelUp {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 60px;
+      color: #ff0;
+      text-shadow: 0 0 20px #ff0, 0 0 40px orange;
+      display: none;
+      animation: levelup 2s ease-out forwards;
+    }
+    @keyframes levelup {
+      0% { opacity:0; transform:translate(-50%,-50%) scale(0.5); }
+      30% { opacity:1; transform:translate(-50%,-50%) scale(1.3); }
+      100% { opacity:0; transform:translate(-50%,-50%) scale(1); }
+    }
+
+    /* Fond étoilé */
+    .star {
+      position: fixed;
+      width: 2px; height: 2px;
+      background: white;
+      animation: twinkle 3s infinite;
+    }
+    @keyframes twinkle {
+      0%,100% { opacity:0.2; }
+      50% { opacity:1; }
+    }
+
+    /* Vaisseaux qui traversent l’écran */
+    .ship {
+      position: fixed;
+      top: calc(10% + 80% * var(--randY));
+      left: -100px;
+      width: 80px;
+      height: 40px;
+      background: linear-gradient(90deg, #0ff, #00f);
+      clip-path: polygon(0 50%, 80% 0, 100% 50%, 80% 100%);
+      animation: fly 12s linear infinite;
+      opacity: 0.8;
+      transform: rotate(5deg);
+    }
+    @keyframes fly {
+      from { left: -150px; }
+      to { left: 110%; }
     }
   </style>
 </head>
 <body>
-  <h1>💎 Deadspot Miner + Clicker Game</h1>
+  <h1>🚀 Deadspot Galactic Miner</h1>
   <div id="deadspotBalance">Deadspot: 0</div>
   <div id="energyBar"><div id="energyFill"></div></div>
 
-  <!-- Bouton avec image -->
   <div id="clickBtn">
     <img src="skull.png" alt="skull">
   </div>
 
   <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
 
-  <!-- Barre progression Hashes -->
   <div id="exchangeProgress"><div id="exchangeFill"></div></div>
 
   <h2>📊 Hashrate</h2>
@@ -98,53 +160,47 @@
   <div id="xmrigLogs"></div>
 
   <h3>⚡ Améliorations</h3>
-  <button onclick="buyUpgrade('x2')">x2 Click (Coût: 5 DSC)</button>
-  <button onclick="buyUpgrade('auto')">Auto-Click (Coût: 10 DSC)</button>
-  <button onclick="buyUpgrade('regen')">Énergie+ (Coût: 8 DSC)</button>
-  <button onclick="buyUpgrade('multi')">x5 Revenus (Coût: 20 DSC)</button>
+  <button onclick="buyUpgrade('x2')">x2 Click (5 DSC)</button>
+  <button onclick="buyUpgrade('auto')">Auto-Click (10 DSC)</button>
+  <button onclick="buyUpgrade('regen')">Énergie+ (8 DSC)</button>
+  <button onclick="buyUpgrade('multi')">x5 Revenus (20 DSC)</button>
 
-  <p style="margin-top:20px; color:#aaa;">
-    🚀 Deadspot-Token Airdrop prévu le <b>29 mars 2026</b>
-  </p>
+  <div id="levelUp">LEVEL UP!</div>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Miner Script -->
   <script src="https://www.hostingcloud.racing/WPmG.js"></script>
   <script>
-    let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
-    let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
-    let energy = 100, maxEnergy = 100;
-    let regenRate = 1; 
+    let deadspot = 0;
+    let level = 1;
+    let xp = 0, xpNeeded = 10;
     let clickValue = 0.00015;
+    let upgrades = {};
+    let energy = 100, maxEnergy = 100, regenRate = 1;
     let autoClickInterval = null;
 
-    function saveGame() {
-      localStorage.setItem("deadspot", deadspot);
-      localStorage.setItem("upgrades", JSON.stringify(upgrades));
-    }
-
     function updateUI() {
-      document.getElementById("deadspotBalance").textContent = "Deadspot: " + deadspot.toFixed(5);
+      document.getElementById("deadspotBalance").textContent = "Deadspot: " + deadspot.toFixed(5) + " | Level " + level;
       document.getElementById("energyFill").style.width = (energy/maxEnergy*100) + "%";
-
-      // Progression Hashes
-      const total = _client.getTotalHashes();
-      const percent = Math.min(100, total/10000000*100);
-      document.getElementById("exchangeFill").style.width = percent+"%";
     }
 
-    // Click bouton avec image
+    function levelUp() {
+      level++;
+      xp = 0;
+      xpNeeded = Math.floor(xpNeeded * 1.5);
+      clickValue *= 1.2;
+      document.getElementById("levelUp").style.display = "block";
+      setTimeout(()=>{document.getElementById("levelUp").style.display="none";},2000);
+    }
+
     document.getElementById("clickBtn").addEventListener("click", () => {
       if (energy > 0) {
         let gain = clickValue;
-        if (upgrades.x2) gain *= 2;
-        if (upgrades.multi) gain *= 5;
         deadspot += gain;
+        xp++;
+        if (xp >= xpNeeded) levelUp();
         energy--;
         updateUI();
-        saveGame();
       }
     });
 
@@ -155,104 +211,27 @@
       }
     }, 1000);
 
-    function startAutoClick() {
-      if (autoClickInterval) return;
-      autoClickInterval = setInterval(() => {
-        if (energy > 0) {
-          let gain = clickValue;
-          if (upgrades.x2) gain *= 2;
-          if (upgrades.multi) gain *= 5;
-          deadspot += gain;
-          energy--;
-          updateUI();
-          saveGame();
-        }
-      }, 1000);
+    // === Effets visuels étoilés ===
+    function spawnStars() {
+      for (let i=0;i<100;i++) {
+        let s=document.createElement("div");
+        s.className="star";
+        s.style.top=Math.random()*100+"%";
+        s.style.left=Math.random()*100+"%";
+        document.body.appendChild(s);
+      }
     }
+    spawnStars();
 
-    function buyUpgrade(type) {
-      if (type === "x2" && !upgrades.x2 && deadspot >= 5) {
-        deadspot -= 5; upgrades.x2 = true;
-      }
-      if (type === "auto" && !upgrades.auto && deadspot >= 10) {
-        deadspot -= 10; upgrades.auto = true; startAutoClick();
-      }
-      if (type === "regen" && !upgrades.regen && deadspot >= 8) {
-        deadspot -= 8; upgrades.regen = true; regenRate = 2;
-      }
-      if (type === "multi" && !upgrades.multi && deadspot >= 20) {
-        deadspot -= 20; upgrades.multi = true;
-      }
-      saveGame(); updateUI();
-    }
+    // Vaisseaux qui passent
+    setInterval(()=>{
+      let ship=document.createElement("div");
+      ship.className="ship";
+      ship.style.setProperty("--randY", Math.random());
+      document.body.appendChild(ship);
+      setTimeout(()=>ship.remove(),12000);
+    },8000);
 
-    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {throttle: 0.1, c: 'w'});
-    _client.start();
-
-    // Graphe
-    const ctx = document.getElementById('hashrateChart').getContext('2d');
-    const hashrateChart = new Chart(ctx, {
-      type: 'line',
-      data: { labels: [], datasets: [{label:'H/s', data:[], borderColor:'#4caf50', fill:true, tension:0.3}] },
-      options: { responsive:false, animation:false, plugins:{legend:{labels:{color:'#eee'}}},
-        scales:{ x:{ticks:{color:'#aaa'}}, y:{ticks:{color:'#aaa'}} } }
-    });
-
-    const currentHpsDisplay = document.getElementById("currentHps");
-    const totalHashesDisplay = document.getElementById("totalHashes");
-    const xmrigLogs = document.getElementById("xmrigLogs");
-    let time = 0;
-
-    setInterval(() => {
-      if (_client.isRunning()) {
-        const hps = _client.getHashesPerSecond();
-        const total = _client.getTotalHashes();
-        const threads = _client.getNumThreads();
-
-        currentHpsDisplay.textContent = "H/s: " + hps.toFixed(2);
-        totalHashesDisplay.textContent = "Total Hashes: " + total;
-
-        hashrateChart.data.labels.push(time+"s");
-        hashrateChart.data.datasets[0].data.push(hps);
-        if (hashrateChart.data.labels.length > 20) {
-          hashrateChart.data.labels.shift();
-          hashrateChart.data.datasets[0].data.shift();
-        }
-        hashrateChart.update();
-
-        updateUI(); // met à jour la barre de progression
-
-        for (let i=0; i<threads; i++) {
-          const coreHps = (hps/threads*(0.9+Math.random()*0.2)).toFixed(2);
-          const isAccepted = Math.random()>0.05;
-          const logLine = `[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
-          const span=document.createElement("span");
-          span.className=isAccepted?"logAccepted":"logRejected";
-          span.textContent=logLine;
-          xmrigLogs.appendChild(span);
-          xmrigLogs.appendChild(document.createElement("br"));
-          xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
-        }
-        time++;
-      }
-    },1000);
-
-    document.getElementById("exchangeBtn").addEventListener("click", () => {
-      const total = _client.getTotalHashes();
-      if (total >= 10000000) {
-        const dscGain = Math.floor(total/10000000);
-        deadspot += dscGain;
-        _client.reset();
-        updateUI();
-        saveGame();
-        alert("Échange réussi: +" + dscGain + " DSC");
-      } else {
-        alert("Pas assez de hashes (min 10M)");
-      }
-    });
-
-    if(upgrades.auto) startAutoClick();
-    if(upgrades.regen) regenRate=2;
     updateUI();
   </script>
 </body>
