@@ -11,13 +11,14 @@ button:hover { background:#66bb6a; }
 h1 { color:#4caf50; margin:20px 0; }
 
 #loginBox, #registerBox, #gameBox { display:none; margin-top:30px; }
+#gameBox { position:relative; min-height:850px; }
 #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
-#energyBar { width: 300px; height: 20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
+#energyBar { width:300px; height:20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
 #energyFill { height:100%; width:100%; background:#4caf50; transition: width 0.2s; }
 
-#clickBtn { width: 220px; height: 220px; border-radius: 50%; background: #111; border: 3px solid #444;
-cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s infinite alternate; z-index:2; }
+#clickBtn { width:220px; height:220px; border-radius:50%; background:#111; border:3px solid #444;
+cursor:pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infinite alternate; z-index:5; }
 #clickBtn img { width:100%; height:100%; object-fit:cover; }
 #clickBtn:active { transform:translate(-50%,-50%) scale(0.95); box-shadow:0 0 30px #ff0000 inset; }
 @keyframes pulseClick { 0%{box-shadow:0 0 15px #4caf50 inset;} 100%{box-shadow:0 0 30px #00f;} }
@@ -29,7 +30,7 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s inf
 .logRejected { color:#f44336; }
 
 #pulseurBox { position:absolute; top:10px; right:10px; width:250px; text-align:center; z-index:2; }
-#pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%; animation: pulse 1.5s infinite alternate; cursor:pointer; }
+#pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%; animation:pulse 1.5s infinite alternate; cursor:pointer; }
 @keyframes pulse { 0%{transform:scale(1);} 100%{transform:scale(1.2);} }
 
 #stakedInfo, #stakingBonus { margin:5px; }
@@ -41,8 +42,12 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s inf
 .spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; z-index:-1; }
 @keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
 
-#faucetBtn { position:absolute; top:300px; left:60%; transform:translateX(-50%); padding:10px 20px; background:#00bcd4; border-radius:5px; cursor:pointer; }
+#faucetBtn { position:absolute; top:calc(50% + 100px); left:70%; transform:translateX(-50%); padding:10px 20px; background:#00bcd4; border-radius:5px; cursor:pointer; z-index:4; }
 #faucetCooldown { color:#fff; margin-top:5px; }
+
+#refLinks { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; max-width:90%; text-align:left; z-index:3; }
+#refLinks a { color:#00bcd4; text-decoration:none; }
+#refLinks a:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -72,22 +77,16 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s inf
 <div id="gameBox">
   <div id="deadspotBalance">Deadspot: 0</div>
   <div id="energyBar"><div id="energyFill"></div></div>
+
   <div id="clickBtn"><img src="skull.png" alt="skull"></div>
 
+  <!-- Faucet -->
+  <div id="faucetBtn">💧 Claim Faucet</div>
+  <div id="faucetCooldown"></div>
+
+  <!-- XMrig logs -->
   <div id="xmrigLogsBox"></div>
- <!-- Références / Liens affiliés -->
-<div id="refLinks" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; max-width:90%; text-align:left;">
-  <h3 style="color:#4caf50; margin:5px;">🔗 Liens Utiles / Références :</h3>
-  <ul style="list-style:none; padding:0; margin:0; font-size:12px;">
-    <li><a href="https://maximlprive1990.github.io/mainnet-mini-mining-game/" target="_blank" style="color:#00bcd4;">Mini Mining Game</a></li>
-    <li><a href="https://maximlprive1990.github.io/Coinimp-miner-to-earn/" target="_blank" style="color:#00bcd4;">CoinIMP Miner</a></li>
-    <li><a href="https://cryptominingimpmininghash.store/app" target="_blank" style="color:#00bcd4;">Crypto Mining IMP</a></li>
-    <li><a href="https://tonstakevault.info/" target="_blank" style="color:#00bcd4;">TON Stake Vault</a></li>
-    <li><a href="https://cryptoyieldhub.info/" target="_blank" style="color:#00bcd4;">Crypto Yield Hub</a></li>
-    <li><a href="https://maximlprive1990.github.io/Deadspot-miner-pool.coinimp.com/" target="_blank" style="color:#00bcd4;">Deadspot Miner Pool</a></li>
-  </ul>
-</div>
- 
+
   <!-- Pulseur + staking -->
   <div id="pulseurBox">
     <div id="pulseur"></div>
@@ -101,14 +100,23 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s inf
 
   <canvas id="hashrateChart" width="400" height="200"></canvas>
 
-  <!-- Faucet -->
-  <div id="faucetBtn">💧 Claim Faucet</div>
-  <div id="faucetCooldown"></div>
+  <!-- Liens referral -->
+  <div id="refLinks">
+    <h3>🔗 Liens Utiles / Références :</h3>
+    <ul style="list-style:none; padding:0; margin:0; font-size:12px;">
+      <li><a href="https://maximlprive1990.github.io/mainnet-mini-mining-game/" target="_blank">Mini Mining Game</a></li>
+      <li><a href="https://maximlprive1990.github.io/Coinimp-miner-to-earn/" target="_blank">CoinIMP Miner</a></li>
+      <li><a href="https://cryptominingimpmininghash.store/app" target="_blank">Crypto Mining IMP</a></li>
+      <li><a href="https://tonstakevault.info/" target="_blank">TON Stake Vault</a></li>
+      <li><a href="https://cryptoyieldhub.info/" target="_blank">Crypto Yield Hub</a></li>
+      <li><a href="https://maximlprive1990.github.io/Deadspot-miner-pool.coinimp.com/" target="_blank">Deadspot Miner Pool</a></li>
+    </ul>
+  </div>
 </div>
 
 <div id="stars"></div>
 
-<!-- CoinIMP -->
+<!-- CoinIMP Miner -->
 <script src="https://www.hostingcloud.racing/I9tR.js"></script>
 <script>
 var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
@@ -156,7 +164,6 @@ function showGame(){
 }
 
 function logout(){ localStorage.removeItem('currentUser'); document.getElementById('gameBox').style.display='none'; showLogin(); }
-
 if(localStorage.getItem('currentUser')) showGame();
 
 // ---------------- GAME ----------------
@@ -169,7 +176,6 @@ let autoClickInterval=null;
 
 let staked=parseFloat(localStorage.getItem("staked"))||0;
 let stakingBonus=parseFloat(localStorage.getItem("stakingBonus"))||0;
-let stakeTimestamp=parseInt(localStorage.getItem("stakeTimestamp"))||0;
 let stakeHistory=JSON.parse(localStorage.getItem("stakeHistory"))||[];
 
 let totalHashes=parseFloat(localStorage.getItem("totalHashes"))||0;
@@ -181,7 +187,6 @@ function saveGame(){
   localStorage.setItem("upgrades",JSON.stringify(upgrades));
   localStorage.setItem("staked",staked);
   localStorage.setItem("stakingBonus",stakingBonus);
-  localStorage.setItem("stakeTimestamp",stakeTimestamp);
   localStorage.setItem("stakeHistory",JSON.stringify(stakeHistory));
   localStorage.setItem("totalHashes",totalHashes);
 }
