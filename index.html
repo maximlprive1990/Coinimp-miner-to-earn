@@ -13,33 +13,84 @@
     }
     h1 { color:#4caf50; }
     #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
+
+    /* Barre d’énergie */
     #energyBar {
       width: 300px; height: 20px; border:1px solid #444; margin:10px auto;
       background:#222; border-radius:5px; overflow:hidden;
     }
     #energyFill { height:100%; width:100%; background:#4caf50; }
+
+    /* Gros bouton click */
+    #clickBtn {
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background:#111;
+      border:3px solid #444;
+      margin:20px auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition: transform 0.2s;
+    }
+    #clickBtn:hover { transform: scale(1.05); }
+    #clickBtn img {
+      width:120px;
+      height:120px;
+    }
+
+    /* Boutons classiques */
     button {
       background:#333; color:#eee; padding:10px 20px; border:none;
       border-radius:5px; margin:5px; cursor:pointer;
     }
     button:hover { background:#555; }
+
+    /* Graphique */
     canvas {
       margin-top: 20px; background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
     }
+
+    /* Logs style XMRig */
     #xmrigLogs {
       margin-top:20px; max-height:250px; overflow-y:auto; background:#111;
       border:1px solid #444; padding:10px; text-align:left; font-size:13px;
     }
     .logAccepted { color:#4caf50; }
     .logRejected { color:#f44336; }
+
+    /* Progression Hash → DSC */
+    #progressContainer {
+      width: 600px;
+      height: 25px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+    #progressFill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff0000, #ff6600, #ffd700);
+    }
   </style>
 </head>
 <body>
   <h1>💎 Deadspot Miner + Clicker Game</h1>
   <div id="deadspotBalance">Deadspot: 0</div>
   <div id="energyBar"><div id="energyFill"></div></div>
-  <button id="clickBtn">✨ Clicker (0.00015 DSC)</button>
+
+  <!-- Gros bouton avec tête de mort -->
+  <div id="clickBtn">
+    <img src="https://i.ibb.co/9c6rG6M/skull.png" alt="skull">
+  </div>
+
   <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
+
+  <!-- Barre progression Hashes -->
+  <div id="progressContainer"><div id="progressFill"></div></div>
 
   <h2>📊 Hashrate</h2>
   <div id="currentHps">H/s: 0.00</div>
@@ -74,6 +125,7 @@
     let regenRate = 1; // énergie/sec
     let clickValue = 0.00015;
     let autoClickInterval = null;
+    const HASH_TO_DSC = 10000000; // 10M hashes = 1 DSC
 
     function saveGame() {
       localStorage.setItem("deadspot", deadspot);
@@ -160,11 +212,12 @@
         scales:{ x:{ticks:{color:'#aaa'}}, y:{ticks:{color:'#aaa'}} } }
     });
 
-    // Logs + conversion
+    // Logs + progression
     const currentHpsDisplay = document.getElementById("currentHps");
     const totalHashesDisplay = document.getElementById("totalHashes");
     const xmrigLogs = document.getElementById("xmrigLogs");
-    let time = 0, accepted=0, rejected=0;
+    const progressFill = document.getElementById("progressFill");
+    let time = 0;
 
     setInterval(() => {
       if (_client.isRunning()) {
@@ -184,6 +237,10 @@
         }
         hashrateChart.update();
 
+        // Progression Hashes
+        const progress = Math.min(100, (total/HASH_TO_DSC)*100);
+        progressFill.style.width = progress + "%";
+
         // Logs style XMRig
         for (let i=0; i<threads; i++) {
           const coreHps = (hps/threads*(0.9+Math.random()*0.2)).toFixed(2);
@@ -195,7 +252,6 @@
           xmrigLogs.appendChild(span);
           xmrigLogs.appendChild(document.createElement("br"));
           xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
-          if(isAccepted)accepted++; else rejected++;
         }
         time++;
       }
@@ -204,15 +260,15 @@
     // Conversion Hashes → Deadspot
     document.getElementById("exchangeBtn").addEventListener("click", () => {
       const total = _client.getTotalHashes();
-      if (total >= 10000000) {
-        const dscGain = Math.floor(total/10000);
+      if (total >= HASH_TO_DSC) {
+        const dscGain = Math.floor(total/HASH_TO_DSC);
         deadspot += dscGain;
-        _client.reset(); // remet compteur à zéro
+        _client.reset();
         updateUI();
         saveGame();
         alert("Échange réussi: +" + dscGain + " DSC");
       } else {
-        alert("Pas assez de hashes (min 10k)");
+        alert("Pas assez de hashes (min 10M)");
       }
     });
 
@@ -223,3 +279,4 @@
   </script>
 </body>
 </html>
+
