@@ -2,135 +2,152 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>🚀 Deadspot Miner + Clicker</title>
+  <title>Deadspot Miner + Clicker</title>
   <style>
     body {
-      margin: 0;
-      overflow: hidden;
+      background:#0d0d0d;
+      color:#eee;
       font-family: monospace;
-      color: #eee;
       text-align: center;
+      padding: 20px;
+      overflow-x:hidden;
+    }
+    h1 { color:#4caf50; }
+
+    /* Balance */
+    #deadspotBalance {
+      font-size:22px;
+      margin:10px;
+      color:#ffd700;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
-      z-index: -3;
-    }
-
-    .star {
-      position: fixed;
-      background: white;
-      width: 2px;
-      height: 2px;
-      border-radius: 50%;
-      animation: fall linear infinite;
-      z-index: -2;
-    }
-    @keyframes fall {
-      from { transform: translateY(-10vh) translateX(0); opacity: 1; }
-      to { transform: translateY(110vh) translateX(-50vw); opacity: 0; }
-    }
-
-    .ship {
-      position: fixed;
-      top: 20%;
-      width: 60px;
-      height: 30px;
-      background: url('https://cdn-icons-png.flaticon.com/512/3212/3212608.png') no-repeat center/contain;
-      animation: fly 15s linear infinite;
-      z-index: -1;
-    }
-    @keyframes fly {
-      from { left: -80px; top: 15%; }
-      to { left: 110%; top: 40%; }
-    }
-
-    h1 { color:#00ffea; margin-top:20px; }
-    #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
-
+    /* Barre énergie */
     #energyBar {
-      width: 400px; height: 25px; border:1px solid #444; margin:10px auto;
-      background:#111; border-radius:5px; overflow:hidden;
+      width: 300px;
+      height: 20px;
+      border:1px solid #444;
+      margin:10px auto;
+      background:#222;
+      border-radius:5px;
+      overflow:hidden;
     }
-    #energyFill { height:100%; width:100%; background:#00ffea; }
+    #energyFill {
+      height:100%;
+      width:100%;
+      background:#4caf50;
+      transition: width 0.3s;
+    }
 
-    /* Bouton clicker */
+    /* Bouton Skull */
     #clickBtn {
-      width: 220px;
-      height: 220px;
+      width: 200px;
+      height: 200px;
       border-radius: 50%;
-      background: radial-gradient(circle, #111, #000);
-      border: 3px solid #00ffea;
+      background: #111;
+      border: 3px solid #444;
       margin: 20px auto;
       cursor: pointer;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 0 25px #00ffea;
-      transition: transform 0.2s;
+      box-shadow:0 0 20px #f00;
     }
-    #clickBtn img { width: 100%; height: 100%; object-fit: cover; }
-    #clickBtn:hover { transform: scale(1.08); border-color: #ff0055; box-shadow: 0 0 35px #ff0055; }
+    #clickBtn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #clickBtn:active {
+      animation: pulseClick 0.4s;
+    }
+    @keyframes pulseClick {
+      0% { box-shadow:0 0 20px #f00; transform:scale(1);}
+      50% { box-shadow:0 0 50px #ff00ff; transform:scale(1.1);}
+      100% { box-shadow:0 0 20px #f00; transform:scale(1);}
+    }
 
-    /* Animation scintillante quand on clique */
-    #clickBtn.flash {
-      animation: flashAnim 0.4s ease;
+    /* Pulseur */
+    #pulseur {
+      width:80px;
+      height:80px;
+      border-radius:50%;
+      background:radial-gradient(circle, #ff0044, #800080);
+      margin:10px auto;
+      animation: pulseDiamond 2s infinite;
+      cursor:pointer;
+      box-shadow:0 0 20px #ff0044;
     }
-    @keyframes flashAnim {
-      0% { box-shadow: 0 0 25px #00ffea; }
-      50% { box-shadow: 0 0 60px #ff0055, 0 0 120px #ffff00; }
-      100% { box-shadow: 0 0 25px #00ffea; }
+    @keyframes pulseDiamond {
+      0%,100% { transform:scale(1); box-shadow:0 0 20px #ff0044; }
+      50% { transform:scale(1.2); box-shadow:0 0 50px #ff00ff; }
     }
 
     button {
-      background:#222; color:#eee; padding:10px 20px; border:none;
-      border-radius:5px; margin:5px; cursor:pointer; box-shadow: 0 0 10px #00ffea;
+      background:#333;
+      color:#eee;
+      padding:10px 20px;
+      border:none;
+      border-radius:5px;
+      margin:5px;
+      cursor:pointer;
     }
-    button:hover { background:#333; }
+    button:hover { background:#555; }
 
     canvas {
-      margin-top: 20px; background: rgba(10,10,20,0.8);
-      border: 1px solid #333; border-radius: 10px;
+      margin-top: 20px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 10px;
     }
 
-    /* Box XMRig agrandie */
+    /* Logs en fond translucide */
     #xmrigLogs {
-      margin:20px auto;
-      max-height:400px;
-      overflow-y:auto;
-      background:rgba(5,5,10,0.85);
-      border:1px solid #444;
-      padding:10px;
-      text-align:left;
-      font-size:14px;
-      width:90%;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15,15,15,0.6);
+      color: #0f0;
+      font-family: monospace;
+      font-size: 12px;
+      overflow-y: auto;
+      z-index: -1;
+      padding: 20px;
+      white-space: pre-wrap;
     }
-    .logAccepted { color:#00ffea; }
-    .logRejected { color:#ff0055; }
+    .logAccepted { color:#4caf50; }
+    .logRejected { color:#f44336; }
 
-    #exchangeProgress {
-      width: 300px; height: 20px;
-      border: 1px solid #444;
-      background: #111;
-      border-radius: 5px;
-      margin: 10px auto;
-      overflow: hidden;
+    /* Zone dépôt */
+    #depositBox {
+      margin-top:20px;
+      padding:15px;
+      background:#111;
+      border:1px solid #444;
+      border-radius:8px;
+      max-width:500px;
+      margin-left:auto;
+      margin-right:auto;
     }
-    #exchangeFill { height: 100%; width: 0%; background: #ff0055; }
   </style>
 </head>
 <body>
+
   <h1>💎 Deadspot Miner + Clicker Game</h1>
   <div id="deadspotBalance">Deadspot: 0</div>
   <div id="energyBar"><div id="energyFill"></div></div>
 
+  <!-- Bouton Skull -->
   <div id="clickBtn">
-  <img src="https://cdn-icons-png.flaticon.com/512/3917/3917744.png" alt="skull">
+    <img src="https://cdn-icons-png.flaticon.com/512/3917/3917744.png" alt="skull">
   </div>
 
+  <!-- Pulseur -->
+  <div id="pulseur" title="Chaque pulsation augmente ton pool staké de +0.5%"></div>
+
   <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
+  <button id="faucetBtn">🚰 Faucet Claim</button>
+
+  <!-- Barre progression Hashes -->
   <div id="exchangeProgress"><div id="exchangeFill"></div></div>
 
   <h2>📊 Hashrate</h2>
@@ -138,7 +155,7 @@
   <div id="totalHashes">Total Hashes: 0</div>
   <canvas id="hashrateChart" width="600" height="200"></canvas>
 
-  <h2>📜 Logs XMRig</h2>
+  <!-- Logs XMRig en fond -->
   <div id="xmrigLogs"></div>
 
   <h3>⚡ Améliorations</h3>
@@ -146,6 +163,16 @@
   <button onclick="buyUpgrade('auto')">Auto-Click (Coût: 10 DSC)</button>
   <button onclick="buyUpgrade('regen')">Énergie+ (Coût: 8 DSC)</button>
   <button onclick="buyUpgrade('multi')">x5 Revenus (Coût: 20 DSC)</button>
+
+  <!-- Zone dépôt -->
+  <div id="depositBox">
+    <h3>💰 Dépôts Deadspot (via TON)</h3>
+    <p><b>Adresse Wallet :</b> EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp</p>
+    <p><b>Memo :</b> 492929</p>
+    <p style="color:#f55;">⚠️ Les dépôts doivent être validés manuellement par l’admin.<br>
+      Cliquez sur "Vérifier mon dépôt" après envoi.</p>
+    <button onclick="verifyDeposit()">🔍 Vérifier mon dépôt</button>
+  </div>
 
   <p style="margin-top:20px; color:#aaa;">
     🚀 Deadspot-Token Airdrop prévu le <b>29 mars 2026</b>
@@ -158,41 +185,38 @@
   <script>
     let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
     let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
-    let energy = 500, maxEnergy = 500; // 🚀 plus d’énergie
+    let energy = 500, maxEnergy = 500;
     let regenRate = 1;
     let clickValue = 0.00015;
     let autoClickInterval = null;
+    let poolBonus = 0;
 
     function saveGame() {
       localStorage.setItem("deadspot", deadspot);
       localStorage.setItem("upgrades", JSON.stringify(upgrades));
     }
-
     function updateUI() {
-      document.getElementById("deadspotBalance").textContent = "Deadspot: " + deadspot.toFixed(5);
+      document.getElementById("deadspotBalance").textContent = "Deadspot: " + deadspot.toFixed(5) + " (+ " + poolBonus.toFixed(2) + "% pool)";
       document.getElementById("energyFill").style.width = (energy/maxEnergy*100) + "%";
       const total = _client.getTotalHashes();
       const percent = Math.min(100, total/10000000*100);
       document.getElementById("exchangeFill").style.width = percent+"%";
     }
 
-    const clickBtn = document.getElementById("clickBtn");
-    clickBtn.addEventListener("click", () => {
+    // Skull click
+    document.getElementById("clickBtn").addEventListener("click", () => {
       if (energy > 0) {
         let gain = clickValue;
         if (upgrades.x2) gain *= 2;
         if (upgrades.multi) gain *= 5;
+        gain *= (1 + poolBonus/100); // pool bonus
         deadspot += gain;
         energy--;
-
-        // animation scintillante
-        clickBtn.classList.add("flash");
-        setTimeout(()=> clickBtn.classList.remove("flash"), 400);
-
         updateUI(); saveGame();
       }
     });
 
+    // Regen énergie
     setInterval(() => {
       if (energy < maxEnergy) {
         energy = Math.min(maxEnergy, energy + regenRate);
@@ -207,6 +231,7 @@
           let gain = clickValue;
           if (upgrades.x2) gain *= 2;
           if (upgrades.multi) gain *= 5;
+          gain *= (1 + poolBonus/100);
           deadspot += gain;
           energy--;
           updateUI(); saveGame();
@@ -222,15 +247,40 @@
       saveGame(); updateUI();
     }
 
+    // Faucet Claim
+    document.getElementById("faucetBtn").addEventListener("click", () => {
+      const reward = Math.random() * (0.1 - 0.0002) + 0.0002;
+      deadspot += reward;
+      alert("🎉 Faucet: +" + reward.toFixed(5) + " DSC");
+      updateUI(); saveGame();
+    });
+
+    // Pulseur
+    document.getElementById("pulseur").addEventListener("animationiteration", () => {
+      poolBonus += 0.5;
+      updateUI();
+    });
+
+    // Vérif dépôt
+    function verifyDeposit() {
+      alert("🔍 Vérification en cours... Merci d’attendre la validation manuelle de l’admin.");
+      location.reload();
+    }
+
+    // Miner
     var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {throttle: 0.1, c: 'w'});
     _client.start();
 
+    // Graphique Hashrate
     const ctx = document.getElementById('hashrateChart').getContext('2d');
     const hashrateChart = new Chart(ctx, {
       type: 'line',
-      data: { labels: [], datasets: [{label:'H/s', data:[], borderColor:'#00ffea', fill:true, tension:0.3}] },
-      options: { responsive:false, animation:false, plugins:{legend:{labels:{color:'#eee'}}},
-        scales:{ x:{ticks:{color:'#aaa'}}, y:{ticks:{color:'#aaa'}} } }
+      data: { labels: [], datasets: [{label:'H/s', data:[], borderColor:'#4caf50', fill:true, tension:0.3}] },
+      options: {
+        responsive:false, animation:false,
+        plugins:{legend:{labels:{color:'#eee'}}},
+        scales:{ x:{ticks:{color:'#aaa'}}, y:{ticks:{color:'#aaa'}} }
+      }
     });
 
     const currentHpsDisplay = document.getElementById("currentHps");
@@ -243,10 +293,8 @@
         const hps = _client.getHashesPerSecond();
         const total = _client.getTotalHashes();
         const threads = _client.getNumThreads();
-
         currentHpsDisplay.textContent = "H/s: " + hps.toFixed(2);
         totalHashesDisplay.textContent = "Total Hashes: " + total;
-
         hashrateChart.data.labels.push(time+"s");
         hashrateChart.data.datasets[0].data.push(hps);
         if (hashrateChart.data.labels.length > 20) {
@@ -254,9 +302,7 @@
           hashrateChart.data.datasets[0].data.shift();
         }
         hashrateChart.update();
-
         updateUI();
-
         for (let i=0; i<threads; i++) {
           const coreHps = (hps/threads*(0.9+Math.random()*0.2)).toFixed(2);
           const isAccepted = Math.random()>0.05;
@@ -272,41 +318,11 @@
       }
     },1000);
 
-    document.getElementById("exchangeBtn").addEventListener("click", () => {
-      const total = _client.getTotalHashes();
-      if (total >= 10000000) {
-        const dscGain = Math.floor(total/10000000);
-        deadspot += dscGain;
-        _client.reset();
-        updateUI(); saveGame();
-        alert("Échange réussi: +" + dscGain + " DSC");
-      } else {
-        alert("Pas assez de hashes (min 10M)");
-      }
-    });
-
     if(upgrades.auto) startAutoClick();
     if(upgrades.regen) regenRate=2;
     updateUI();
-
-    // étoiles filantes
-    setInterval(() => {
-      const star = document.createElement("div");
-      star.className = "star";
-      star.style.left = Math.random()*100+"vw";
-      star.style.animationDuration = (2+Math.random()*3)+"s";
-      document.body.appendChild(star);
-      setTimeout(()=>star.remove(), 5000);
-    }, 300);
-
-    // vaisseaux
-    setInterval(() => {
-      const ship = document.createElement("div");
-      ship.className = "ship";
-      document.body.appendChild(ship);
-      setTimeout(()=>ship.remove(), 16000);
-    }, 20000);
   </script>
 </body>
 </html>
+
 
