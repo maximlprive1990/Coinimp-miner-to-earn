@@ -199,30 +199,27 @@
         }
         time++;
       }
-    },1000); 
-    
-  
-     ====================
-    // ÉCHANGE HASHES → DSC
-    // ===================
-       ades.regen) regenRate=2;
-    updateU document.getElementById("exchangeBtn").addEventListener("click", () => {
+    },1000);
+
+    // Conversion Hashes → Deadspot
+    document.getElementById("exchangeBtn").addEventListener("click", () => {
       const total = _client.getTotalHashes();
       if (total >= 10000000) {
-        const dscGain = Math.floor(total / 10000000);
+        const dscGain = Math.floor(total/10000);
         deadspot += dscGain;
         _client.reset(); // remet compteur à zéro
         updateUI();
         saveGame();
         alert("Échange réussi: +" + dscGain + " DSC");
       } else {
-        alert("Pas assez de hashes (min 10,000,000)");
+        alert("Pas assez de hashes (min 10k)");
       }
     });
 
     // Init
     if(upgrades.auto) startAutoClick();
-    if(upgrI();
+    if(upgrades.regen) regenRate=2;
+    updateUI();
   </script>
 </body>
 </html>
