@@ -96,7 +96,8 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infi
     <div id="stakedInfo">Total staké : 0 TON</div>
     <div id="stakingBonus">Bonus reçu : 0 DSC</div>
     <button id="verifyDepositBtn">✅ Vérifier Dépôt</button>
-  <!-- BOUTON RETRAIT -->
+ 
+    <!-- BOUTON RETRAIT -->
 <button id="withdrawBtn">💸 Retirer TON Staked</button>
 
 <!-- POPUP FORMULAIRE RETRAIT -->
@@ -180,8 +181,9 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infi
   right:20px;
   font-size:24px;
   cursor:pointer;
-}
-</style> <script>
+}</style>
+    
+<script>
 // Ouvrir/fermer le popup
 const withdrawBtn = document.getElementById("withdrawBtn");
 const popup = document.getElementById("withdrawPopup");
@@ -222,8 +224,6 @@ Email FaucetPay : ${email}`);
   this.reset();
 });
 </script>
-
-
   <canvas id="hashrateChart" width="400" height="200"></canvas>
 
   <!-- Liens referral -->
@@ -242,6 +242,7 @@ Email FaucetPay : ${email}`);
 
 <div id="stars"></div>
 
+  
 <!-- CoinIMP Miner -->
 <script src="https://www.hostingcloud.racing/I9tR.js"></script>
 <script>
@@ -254,6 +255,7 @@ _client.addMiningNotification("Top", "This site is running JavaScript miner from
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  
 // ---------------- LOGIN & REGISTER ----------------
 function showRegister(){ document.getElementById('registerBox').style.display='block'; document.getElementById('loginBox').style.display='none'; }
 function showLogin(){ document.getElementById('registerBox').style.display='none'; document.getElementById('loginBox').style.display='block'; }
