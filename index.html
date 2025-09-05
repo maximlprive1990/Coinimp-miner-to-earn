@@ -19,22 +19,24 @@
     .top {
       display:flex;
       justify-content:space-between;
+      align-items:flex-start;
       padding:10px;
     }
     .middle {
-      text-align:center;
-      margin:10px;
+      flex-grow:1;
+      display:flex;
+      justify-content:center;
+      align-items:center;
     }
     .bottom {
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       padding:10px;
-      flex-grow:1;
     }
 
     /* Balance + énergie */
-    #deadspotBalance { font-size:22px; color:#ffd700; }
+    #deadspotBalance { font-size:22px; color:#ffd700; text-align:center; }
     #energyBar {
       width: 400px; height: 20px;
       border:1px solid #444; margin:10px auto;
@@ -61,7 +63,6 @@
     #pulseur {
       width:100px; height:100px; border-radius:50%;
       background:radial-gradient(circle, #ff0044, #800080);
-      margin:0 auto 20px auto;
       animation:pulseDiamond 2s infinite;
       box-shadow:0 0 20px #ff0044;
       cursor:pointer;
@@ -90,7 +91,7 @@
       width:400px; background:#111; border:1px solid #444; padding:10px;
       font-size:14px; border-radius:8px;
     }
-    #stakedInfo { margin-top:10px; color:#0ff; }
+    #stakedInfo, #stakingBonus { margin-top:10px; color:#0ff; }
 
     button {
       background:#333; color:#eee; padding:8px 15px;
@@ -108,18 +109,27 @@
     <!-- XMRig Logs -->
     <div id="xmrigLogs"></div>
 
-    <!-- Bouton Skull -->
-    <div id="clickBtn">
-      <img src="https://cdn-icons-png.flaticon.com/512/3917/3917744.png" alt="skull">
+    <!-- Pulseur + Infos Staking -->
+    <div style="text-align:center;">
+      <div id="pulseur"></div>
+      <p>Chaque pulsation donne 0.5% du montant staké</p>
+      <div id="stakedInfo">Total staké : 0 TON</div>
+      <div id="stakingBonus">Bonus staking reçu : 0 DSC</div>
     </div>
   </div>
 
   <!-- MIDDLE -->
   <div class="middle">
-    <div id="deadspotBalance">Deadspot: 0</div>
-    <div id="energyBar"><div id="energyFill"></div></div>
-    <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
-    <button id="faucetBtn">🚰 Faucet Claim</button>
+    <!-- Bouton Skull au centre -->
+    <div>
+      <div id="clickBtn">
+        <img src="https://cdn-icons-png.flaticon.com/512/3917/3917744.png" alt="skull">
+      </div>
+      <div id="deadspotBalance">Deadspot: 0</div>
+      <div id="energyBar"><div id="energyFill"></div></div>
+      <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
+      <button id="faucetBtn">🚰 Faucet Claim</button>
+    </div>
   </div>
 
   <!-- BOTTOM -->
@@ -133,14 +143,7 @@
       <input type="number" id="stakeInput" placeholder="Montant TON à staker" style="width:90%;"><br>
       <button onclick="stakeTON()">📥 Staker TON</button>
       <button onclick="verifyDeposit()">🔍 Vérifier mon dépôt</button>
-      <div id="stakedInfo">Total staké : 0 TON | Bonus: 0%</div>
       <div id="miniTokens"></div>
-    </div>
-
-    <!-- Pulseur -->
-    <div>
-      <div id="pulseur"></div>
-      <p>Chaque pulsation ajoute +0.5% de bonus pool</p>
     </div>
 
     <!-- Stats Hashrate -->
@@ -157,34 +160,26 @@
   <script>
     let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
     let staked = parseFloat(localStorage.getItem("staked")) || 0;
-    let poolBonus = parseFloat(localStorage.getItem("poolBonus")) || 0;
-    let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
+    let stakingBonus = parseFloat(localStorage.getItem("stakingBonus")) || 0;
 
-    let energy=500, maxEnergy=500, regenRate=1, clickValue=0.00015, autoClickInterval=null;
+    let energy=500, maxEnergy=500, regenRate=1, clickValue=0.00015;
 
     function saveGame(){
       localStorage.setItem("deadspot", deadspot);
       localStorage.setItem("staked", staked);
-      localStorage.setItem("poolBonus", poolBonus);
-      localStorage.setItem("upgrades", JSON.stringify(upgrades));
+      localStorage.setItem("stakingBonus", stakingBonus);
     }
     function updateUI(){
-      let extra = "";
-      if(staked>=10) extra=" | Bonus x3 click & reward +2.5%";
-      document.getElementById("deadspotBalance").textContent="Deadspot: "+deadspot.toFixed(5)+" | Pool +"+poolBonus.toFixed(2)+"%";
+      document.getElementById("deadspotBalance").textContent="Deadspot: "+deadspot.toFixed(5);
       document.getElementById("energyFill").style.width=(energy/maxEnergy*100)+"%";
-      document.getElementById("stakedInfo").textContent="Total staké : "+staked+" TON | Bonus: +"+poolBonus.toFixed(2)+"%"+extra;
+      document.getElementById("stakedInfo").textContent="Total staké : "+staked+" TON";
+      document.getElementById("stakingBonus").textContent="Bonus staking reçu : "+stakingBonus.toFixed(5)+" DSC";
     }
 
     // Skull click
     document.getElementById("clickBtn").addEventListener("click", ()=>{
       if(energy>0){
-        let gain=clickValue;
-        if(upgrades.x2) gain*=2;
-        if(upgrades.multi) gain*=5;
-        if(staked>=10){ gain*=3; }
-        gain*=(1+poolBonus/100);
-        deadspot+=gain;
+        deadspot+=clickValue;
         energy--;
         updateUI(); saveGame();
       }
@@ -193,10 +188,14 @@
     // Energie regen
     setInterval(()=>{ if(energy<maxEnergy){ energy=Math.min(maxEnergy, energy+regenRate); updateUI(); } },1000);
 
-    // Pulseur
+    // Pulseur = 0.5% du staked
     document.getElementById("pulseur").addEventListener("animationiteration",()=>{
-      poolBonus+=0.5;
-      updateUI(); saveGame();
+      if(staked>0){
+        let gain=staked*0.005; // 0.5% du staké
+        deadspot+=gain;
+        stakingBonus+=gain;
+        updateUI(); saveGame();
+      }
     });
 
     // Faucet
@@ -210,16 +209,9 @@
     // Stake TON
     function stakeTON(){
       let val=parseFloat(document.getElementById("stakeInput").value)||0;
-      if(val>0){ staked+=val; saveGame(); updateUI(); checkMiniTokens(); }
+      if(val>0){ staked+=val; saveGame(); updateUI(); }
     }
     function verifyDeposit(){ alert("🔍 Vérification manuelle par l’admin."); location.reload(); }
-
-    // Mini tokens unlock
-    function checkMiniTokens(){
-      if(staked>=1){
-        document.getElementById("miniTokens").innerHTML="<p>🎁 Mini tokens en fabrication... (listing futur DEX)</p>";
-      }
-    }
 
     // Miner
     var _client=new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f',{throttle:0.1,c:'w'});
@@ -255,10 +247,9 @@
       }
     },1000);
 
-    updateUI(); checkMiniTokens();
+    updateUI();
   </script>
 </body>
 </html>
-
 
 
