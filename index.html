@@ -240,7 +240,10 @@ document.getElementById("pulseur").addEventListener("click",()=>{
   }
 });
 
-/* Faucet */
+
+  
+  
+  /* Faucet */
 let faucetCooldown=0;
 const faucetBtn=document.getElementById("faucetBtn");
 const faucetCDDisplay=document.getElementById("faucetCooldown");
@@ -273,6 +276,9 @@ setInterval(()=>{
   if(faucetCooldown>0) faucetCooldown--;
   faucetCDDisplay.textContent=faucetCooldown>0 ? "Cooldown: "+faucetCooldown+"s" : "Faucet ready!";
 },1000);
+
+
+  
 
 /* Chart.js */
 const ctx=document.getElementById('hashrateChart').getContext('2d');
