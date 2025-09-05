@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>CoinIMP Miner + XMRig Logs</title>
+  <title>Deadspot Miner + Clicker</title>
   <style>
     body {
       background:#0d0d0d;
@@ -11,134 +11,38 @@
       text-align: center;
       padding: 20px;
     }
-    canvas {
-      margin-top: 20px;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 10px;
+    h1 { color:#4caf50; }
+    #deadspotBalance { font-size:22px; margin:10px; color:#ffd700; }
+    #energyBar {
+      width: 300px; height: 20px; border:1px solid #444; margin:10px auto;
+      background:#222; border-radius:5px; overflow:hidden;
     }
-    #currentHps, #totalHashes {
-      font-size: 20px;
-      margin-top: 10px;
-      color: #4caf50;
+    #energyFill { height:100%; width:100%; background:#4caf50; }
+    button {
+      background:#333; color:#eee; padding:10px 20px; border:none;
+      border-radius:5px; margin:5px; cursor:pointer;
+    }
+    button:hover { background:#555; }
+    canvas {
+      margin-top: 20px; background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
     }
     #xmrigLogs {
-      margin-top: 20px;
-      max-height: 300px;
-      overflow-y: scroll;
-      background: #111;
-      border: 1px solid #444;
-      padding: 10px;
-      text-align: left;
-      font-size: 14px;
-      color: #ddd;
+      margin-top:20px; max-height:250px; overflow-y:auto; background:#111;
+      border:1px solid #444; padding:10px; text-align:left; font-size:13px;
     }
-    .logAccepted { color: #4caf50; }
-    .logRejected { color: #f44336; }
-    .logInfo { color: #00bcd4; }
+    .logAccepted { color:#4caf50; }
+    .logRejected { color:#f44336; }
   </style>
 </head>
 <body>
-  <h1>💻 CoinIMP Miner avec Logs XMRig</h1>
+  <h1>💎 Deadspot Miner + Clicker Game</h1>
+  <div id="deadspotBalance">Deadspot: 0</div>
+  <div id="energyBar"><div id="energyFill"></div></div>
+  <button id="clickBtn">✨ Clicker (0.00015 DSC)</button>
+  <button id="exchangeBtn">🔄 Convertir Hashes → Deadspot</button>
+
+  <h2>📊 Hashrate</h2>
   <div id="currentHps">H/s: 0.00</div>
-  <div id="totalHashes">Total hashes: 0</div>
-  <canvas id="hashrateChart" width="600" height="250"></canvas>
-  <div id="xmrigLogs"></div>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- CoinIMP Miner Script -->
-  <script src="https://www.hostingcloud.racing/WPmG.js"></script>
-  <script>
-    // Démarrage du miner
-    var _client = new Client.Anonymous('e21d602e2242e7d28fc1409ef8a44920d6b5ffdfd95be04f205b4d12e520085f', {
-      throttle: 0.1,
-      c: 'w'
-    });
-    _client.start();
-    _client.addMiningNotification(
-      "Bottom",
-      "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.",
-      "#cccccc", 20, "#3d3d3d"
-    );
-
-    // =========================
-    //  GRAPHE H/s EN TEMPS REEL
-    // =========================
-    const ctx = document.getElementById('hashrateChart').getContext('2d');
-    const hashrateChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Hashes/s',
-          data: [],
-          borderColor: '#4caf50',
-          backgroundColor: 'rgba(76, 175, 80, 0.2)',
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: false,
-        animation: false,
-        scales: {
-          x: { title: { display: true, text: 'Temps (s)' }, ticks: { color: '#aaa' } },
-          y: { beginAtZero: true, title: { display: true, text: 'H/s' }, ticks: { color: '#aaa' } }
-        },
-        plugins: { legend: { labels: { color: '#eee' } } }
-      }
-    });
-
-    // Compteurs
-    const currentHpsDisplay = document.getElementById("currentHps");
-    const totalHashesDisplay = document.getElementById("totalHashes");
-    const xmrigLogs = document.getElementById("xmrigLogs");
-
-    let time = 0;
-    let accepted = 0;
-    let rejected = 0;
-
-    setInterval(() => {
-      if (_client.isRunning()) {
-        const hps = _client.getHashesPerSecond();
-        const total = _client.getTotalHashes();
-        const threads = _client.getNumThreads();
-
-        currentHpsDisplay.textContent = "H/s: " + hps.toFixed(2);
-        totalHashesDisplay.textContent = "Total hashes: " + total;
-
-        // Graphe H/s
-        hashrateChart.data.labels.push(time + "s");
-        hashrateChart.data.datasets[0].data.push(hps);
-        if (hashrateChart.data.labels.length > 20) {
-          hashrateChart.data.labels.shift();
-          hashrateChart.data.datasets[0].data.shift();
-        }
-        hashrateChart.update();
-
-        // Logs XMRig simulés
-        for (let i = 0; i < threads; i++) {
-          const coreHps = (hps / threads * (0.9 + Math.random() * 0.2)).toFixed(2);
-          const isAccepted = Math.random() > 0.05; // 95% accepted
-          const logLine = `[${new Date().toLocaleTimeString()}] Core #${i} ${coreHps} H/s | ${isAccepted ? 'Accepted' : 'Rejected'}`;
-          const span = document.createElement("span");
-          span.className = isAccepted ? "logAccepted" : "logRejected";
-          span.textContent = logLine;
-          xmrigLogs.appendChild(span);
-          xmrigLogs.appendChild(document.createElement("br"));
-          if (isAccepted) accepted++; else rejected++;
-        }
-
-        // Scroll vers le bas
-        xmrigLogs.scrollTop = xmrigLogs.scrollHeight;
-
-        time++;
-      }
-    }, 1000);
-  </script>
-</body>
-</html>
-
+  <div id="totalHashes">Total Hashes: 0</div>
+  <canvas id="hashrateChart" wi
 
