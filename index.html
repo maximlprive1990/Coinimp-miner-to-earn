@@ -23,6 +23,7 @@ h1 { color:#4caf50; text-align:center; margin:10px 0; }
   cursor: pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
   overflow:hidden; box-shadow:0 0 15px #4caf50 inset;
   animation: pulseClick 2s infinite alternate;
+  z-index:2;
 }
 #clickBtn img { width:100%; height:100%; object-fit:cover; }
 #clickBtn:active { transform:translate(-50%,-50%) scale(0.95); box-shadow:0 0 30px #ff0000 inset; }
@@ -33,7 +34,7 @@ button { background:#333; color:#eee; padding:10px 20px; border:none; border-rad
 button:hover { background:#555; }
 
 /* Canvas / Graph */
-canvas { background:#111; border:1px solid #333; border-radius:10px; }
+#hashrateChart { background:rgba(0,0,0,0.5); border:1px solid #333; border-radius:10px; position:absolute; top:10px; right:10px; }
 
 /* XMRig Logs box */
 #xmrigLogsBox {
@@ -43,15 +44,12 @@ canvas { background:#111; border:1px solid #333; border-radius:10px; }
 .logAccepted { color:#4caf50; }
 .logRejected { color:#f44336; }
 
-/* Hashrate canvas */
-#hashrateChart { position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); }
-
 /* Pulseur + staking */
 #pulseurBox {
-  position:absolute; top:10px; right:10px; width:220px; text-align:center;
+  position:absolute; top:10px; right:10px; width:220px; text-align:center; z-index:2;
 }
 #pulseur { width:50px; height:50px; margin:5px auto; background:red; border-radius:50%;
-animation: pulse 1.5s infinite alternate; }
+animation: pulse 1.5s infinite alternate; cursor:pointer; }
 @keyframes pulse { 0%{transform:scale(1);} 100%{transform:scale(1.2);} }
 
 #stakedInfo, #stakingBonus { margin:5px; }
@@ -63,7 +61,7 @@ animation: pulse 1.5s infinite alternate; }
 @keyframes twinkle { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
 
 /* Spaceships */
-.spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; }
+.spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; z-index:-1; }
 @keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
 </style>
 </head>
@@ -97,7 +95,7 @@ animation: pulse 1.5s infinite alternate; }
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<!-- Miner Script (fictif placeholder) -->
 <script>
 /* ==== Variables ==== */
 let deadspot = parseFloat(localStorage.getItem("deadspot"))||0;
@@ -113,6 +111,10 @@ let stakingBonus = parseFloat(localStorage.getItem("stakingBonus"))||0;
 let stakeTimestamp = parseInt(localStorage.getItem("stakeTimestamp"))||0;
 let stakeHistory = JSON.parse(localStorage.getItem("stakeHistory"))||[];
 
+/* Mining simulation */
+let totalHashes = parseFloat(localStorage.getItem("totalHashes"))||0;
+let hashesPerSecond = 0;
+
 /* ==== Save Game ==== */
 function saveGame(){
   localStorage.setItem("deadspot", deadspot);
@@ -122,6 +124,7 @@ function saveGame(){
   localStorage.setItem("stakingBonus", stakingBonus);
   localStorage.setItem("stakeTimestamp", stakeTimestamp);
   localStorage.setItem("stakeHistory", JSON.stringify(stakeHistory));
+  localStorage.setItem("totalHashes", totalHashes);
 }
 
 /* ==== Update UI ==== */
@@ -137,6 +140,12 @@ function updateUI(){
   stakeHistory.slice(-5).reverse().forEach(e=>{
     let line=document.createElement("div"); line.textContent=e; histBox.appendChild(line);
   });
+
+  // Update hashrate graph
+  hashrateChart.data.labels.push(time+"s");
+  hashrateChart.data.datasets[0].data.push(hashesPerSecond);
+  if(hashrateChart.data.labels.length>20){ hashrateChart.data.labels.shift(); hashrateChart.data.datasets[0].data.shift(); }
+  hashrateChart.update();
 }
 
 /* ==== Clicker ==== */
@@ -170,13 +179,14 @@ function startAutoClick(){
 if(upgrades.auto) startAutoClick();
 
 /* ==== Pulseur ==== */
-setInterval(()=>{
+document.getElementById("pulseur").addEventListener("click",()=>{
   if(staked>0){
-    let bonus=staked*0.005; // 0.5% du montant staké
-    stakingBonus+=bonus;
+    let bonus = staked*0.005; // 0.5% du staked
+    stakingBonus += bonus;
+    stakeHistory.push("Pulse : +" + bonus.toFixed(5) + " DSC");
     saveGame(); updateUI();
   }
-},5000); // toutes les 5s
+});
 
 /* ==== Convert Bonus → Deadspot ==== */
 document.getElementById("convertBonusBtn").addEventListener("click",()=>{
@@ -199,6 +209,31 @@ document.getElementById("withdrawBtn").addEventListener("click",()=>{
   staked=0; stakingBonus=0; saveGame(); updateUI();
 });
 
+/* ==== Chart.js setup ==== */
+const ctx=document.getElementById('hashrateChart').getContext('2d');
+const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
+let time=0;
+
+/* ==== Simulate mining logs ==== */
+const xmrigLogs=document.getElementById("xmrigLogsBox");
+setInterval(()=>{
+  let threads=4;
+  hashesPerSecond=Math.random()*50+50;
+  totalHashes+=hashesPerSecond;
+  for(let i=0;i<threads;i++){
+    let coreHps=(hashesPerSecond/threads*(0.9+Math.random()*0.2)).toFixed(2);
+    let isAccepted=Math.random()>0.05;
+    let line=`[${new Date().toLocaleTimeString()}] Core #${i} | ${coreHps} H/s | ${isAccepted?"Accepted":"Rejected"}`;
+    let span=document.createElement("span");
+    span.className=isAccepted?"logAccepted":"logRejected";
+    span.textContent=line;
+    xmrigLogs.appendChild(span);
+    xmrigLogs.appendChild(document.createElement("br"));
+    xmrigLogs.scrollTop=xmrigLogs.scrollHeight;
+  }
+  time++; updateUI();
+},1000);
+
 /* ==== Stars background ==== */
 for(let i=0;i<100;i++){
   let star=document.createElement("div");
@@ -220,8 +255,9 @@ for(let i=0;i<5;i++){
   document.body.appendChild(ship);
 }
 
-/* ==== Update UI on load ==== */
+/* ==== Load UI ==== */
 updateUI();
 </script>
 </body>
 </html>
+
