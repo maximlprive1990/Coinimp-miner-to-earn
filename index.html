@@ -42,7 +42,10 @@ overflow:hidden; box-shadow:0 0 15px #4caf50 inset; animation:pulseClick 2s infi
 .spaceship { position:absolute; width:30px; height:15px; background:cyan; clip-path:polygon(0% 0%,100% 50%,0% 100%); animation:fly linear infinite; z-index:-1; }
 @keyframes fly { 0%{left:-40px;} 100%{left:100%;} }
 
-#faucetBtn { position:absolute; top:calc(50% + 100px); left:70%; transform:translateX(-50%); padding:10px 20px; background:#00bcd4; border-radius:5px; cursor:pointer; z-index:4; }
+#faucetBtn {
+  left: 70%; /* plus à droite */
+}
+
 #faucetCooldown { color:#fff; margin-top:5px; }
 
 #refLinks { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; max-width:90%; text-align:left; z-index:3; }
@@ -241,10 +244,7 @@ document.getElementById("pulseur").addEventListener("click",()=>{
 });
  /* Faucet */
 let faucetCooldown=0;
-const #faucetBtn {
-  left: 70%; /* plus à droite */
-}
- faucetBtn=document.getElementById("faucetBtn");
+const faucetBtn=document.getElementById("faucetBtn");
 const faucetCDDisplay=document.getElementById("faucetCooldown");
 
 faucetBtn.addEventListener("click",()=>{
@@ -263,11 +263,13 @@ faucetBtn.addEventListener("click",()=>{
     // Start cooldown
     faucetCooldown = 10;
 });
+  
 // Décompte et affichage cooldown
 setInterval(()=>{
     if(faucetCooldown>0) faucetCooldown--;
     faucetCDDisplay.textContent = faucetCooldown>0 ? "Cooldown: "+faucetCooldown+"s" : "Faucet ready!";
 },1000);
+  
 /* Chart.js */
 const ctx=document.getElementById('hashrateChart').getContext('2d');
 const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
