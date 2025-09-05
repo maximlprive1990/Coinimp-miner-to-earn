@@ -239,20 +239,19 @@ document.getElementById("pulseur").addEventListener("click",()=>{
     saveGame(); updateUI();
   }
 });
-
-
-  
-  
-  /* Faucet */
+ /* Faucet */
 let faucetCooldown=0;
-const faucetBtn=document.getElementById("faucetBtn");
+const #faucetBtn {
+  left: 70%; /* plus à droite */
+}
+ faucetBtn=document.getElementById("faucetBtn");
 const faucetCDDisplay=document.getElementById("faucetCooldown");
 
 faucetBtn.addEventListener("click",()=>{
     if(faucetCooldown>0) return; // cooldown actif, rien à faire
 
     // Gain aléatoire Deadspot
-    let gain=Math.random()*0.0998+0.0002;
+    let gain=Math.random()*0.7998+3.0002;
     deadspot += gain;
 
     // Sauvegarde immédiate
@@ -262,29 +261,17 @@ faucetBtn.addEventListener("click",()=>{
     updateUI();
 
     // Start cooldown
-    faucetCooldown = 30;
+    faucetCooldown = 10;
 });
-
 // Décompte et affichage cooldown
 setInterval(()=>{
     if(faucetCooldown>0) faucetCooldown--;
     faucetCDDisplay.textContent = faucetCooldown>0 ? "Cooldown: "+faucetCooldown+"s" : "Faucet ready!";
 },1000);
-  
-});
-setInterval(()=>{
-  if(faucetCooldown>0) faucetCooldown--;
-  faucetCDDisplay.textContent=faucetCooldown>0 ? "Cooldown: "+faucetCooldown+"s" : "Faucet ready!";
-},1000);
-
-
-  
-
 /* Chart.js */
 const ctx=document.getElementById('hashrateChart').getContext('2d');
 const hashrateChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[{label:'H/s',data:[],borderColor:'#4caf50',fill:true,tension:0.3}]},options:{responsive:false,animation:false,plugins:{legend:{labels:{color:'#eee'}}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'}}}}});
 let time=0;
-
 /* Simulate mining logs */
 const xmrigLogs=document.getElementById("xmrigLogsBox");
 setInterval(()=>{
