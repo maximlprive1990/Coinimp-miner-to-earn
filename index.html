@@ -18,7 +18,7 @@ h1 { color:#a66cff; }
     padding:15px;
     margin:10px auto;
     border-radius:10px;
-    max-width:760px;
+    max-width:780px;
 }
 
 button {
@@ -45,7 +45,6 @@ button:hover { background:#9c6bff; }
     background:#2b2140;
     border-radius:10px;
     overflow:hidden;
-    margin-top:5px;
 }
 .bar-fill {
     height:100%;
@@ -55,10 +54,9 @@ button:hover { background:#9c6bff; }
 }
 
 #clickEffect {
-    font-size:22px;
+    font-size:20px;
     color:#5cff8a;
-    height:30px;
-    margin-top:10px;
+    height:28px;
 }
 </style>
 </head>
@@ -80,12 +78,17 @@ button:hover { background:#9c6bff; }
     <button onclick="clickGain()">CLICK</button>
     <div id="clickEffect"></div>
 
-    <p>Clics disponibles : <span id="clicks">0</span> / <span id="maxClicks">0</span></p>
+    <p>
+        Clicks disponibles :
+        <span id="clicks">1500</span> /
+        <span id="maxClicks">1500</span>
+    </p>
+
     <div class="bar">
         <div class="bar-fill" id="clickBar"></div>
     </div>
 
-    <p>Recharge : +1 clic / 3 secondes</p>
+    <p>Recharge : +1 click / 3 secondes</p>
 </div>
 
 <div class="panel">
@@ -93,7 +96,7 @@ button:hover { background:#9c6bff; }
 
     <div class="upgrade">
         <b>Double Click (x2)</b><br>
-        Prix : <span id="price2">1</span> Point<br>
+        Prix : <span id="price2">1</span> Points<br>
         <button onclick="buyUpgrade(2)">Acheter</button>
     </div>
 
@@ -102,24 +105,30 @@ button:hover { background:#9c6bff; }
         Prix : <span id="price3">5</span> Points<br>
         <button onclick="buyUpgrade(3)">Acheter</button>
     </div>
+
+    <div class="upgrade">
+        <b>+1000 Clicks max</b><br>
+        Prix : <span id="priceClicks">10</span> Points<br>
+        <button onclick="buyClickUpgrade()">Acheter</button>
+    </div>
 </div>
 
 <div class="panel">
     <h2>Mineurs</h2>
 
     <div class="miner">
-        CPU Miner – +5 GH/s – 0.05 Points
-        <br><button onclick="buyMiner(0.05,5)">Acheter</button>
+        CPU Miner – +5 GH/s – 0.05 Points<br>
+        <button onclick="buyMiner(0.05,5)">Acheter</button>
     </div>
 
     <div class="miner">
-        GPU Miner – +50 GH/s – 1 Point
-        <br><button onclick="buyMiner(1,50)">Acheter</button>
+        GPU Miner – +50 GH/s – 1 Point<br>
+        <button onclick="buyMiner(1,50)">Acheter</button>
     </div>
 
     <div class="miner">
-        ASIC Miner – +1 TH/s – 15 Points
-        <br><button onclick="buyMiner(15,1000)">Acheter</button>
+        ASIC Miner – +1 TH/s – 15 Points<br>
+        <button onclick="buyMiner(15,1000)">Acheter</button>
     </div>
 </div>
 
@@ -130,14 +139,20 @@ let game = JSON.parse(localStorage.getItem("deadspot_save")) || {
     power:0,
     blocks:0,
     lastBlock:Date.now(),
+
     multiplier:1,
-    clicks:20,
-    maxClicks:20,
+
+    clicks:1500,
+    maxClicks:1500,
+
     price2:1,
-    price3:5
+    price3:5,
+    priceClicks:10
 };
 
-function save(){ localStorage.setItem("deadspot_save", JSON.stringify(game)); }
+function save(){
+    localStorage.setItem("deadspot_save", JSON.stringify(game));
+}
 
 /* ===== CLICK ===== */
 function clickGain(){
@@ -149,8 +164,8 @@ function clickGain(){
     let gain = base * game.multiplier;
     game.points += gain;
 
-    let fx = document.getElementById("clickEffect");
-    fx.innerText = "+"+gain.toFixed(6)+" Points (x"+game.multiplier+")";
+    document.getElementById("clickEffect").innerText =
+        "+"+gain.toFixed(6)+" Points (x"+game.multiplier+")";
 
     update();
 }
@@ -163,7 +178,7 @@ setInterval(()=>{
     }
 },3000);
 
-/* ===== UPGRADES ===== */
+/* ===== UPGRADES MULTI ===== */
 function buyUpgrade(type){
     if(type === 2 && game.points >= game.price2){
         game.points -= game.price2;
@@ -176,6 +191,17 @@ function buyUpgrade(type){
         game.price3 *= 2.5;
     }
     update();
+}
+
+/* ===== UPGRADE CLICKS MAX ===== */
+function buyClickUpgrade(){
+    if(game.points >= game.priceClicks){
+        game.points -= game.priceClicks;
+        game.maxClicks += 1000;
+        game.clicks += 1000;
+        game.priceClicks *= 2;
+        update();
+    }
 }
 
 /* ===== MINEURS ===== */
@@ -205,9 +231,11 @@ function mine(){
 /* ===== TIMER ===== */
 function updateTimer(){
     let remain = BLOCK_TIME - (Date.now()-game.lastBlock);
-    if(remain<0) remain=0;
-    let m=Math.floor(remain/60000);
-    let s=Math.floor((remain%60000)/1000);
+    if(remain < 0) remain = 0;
+
+    let m = Math.floor(remain/60000);
+    let s = Math.floor((remain%60000)/1000);
+
     document.getElementById("timer").innerText =
         String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 }
@@ -218,13 +246,16 @@ function update(){
     document.getElementById("deadspot").innerText = game.deadspot.toFixed(2);
     document.getElementById("power").innerText = game.power;
     document.getElementById("blocks").innerText = game.blocks;
+
     document.getElementById("clicks").innerText = game.clicks;
     document.getElementById("maxClicks").innerText = game.maxClicks;
+
     document.getElementById("price2").innerText = game.price2.toFixed(2);
     document.getElementById("price3").innerText = game.price3.toFixed(2);
+    document.getElementById("priceClicks").innerText = game.priceClicks.toFixed(2);
 
     document.getElementById("clickBar").style.width =
-        (game.clicks/game.maxClicks*100)+"%";
+        (game.clicks / game.maxClicks * 100) + "%";
 
     save();
 }
