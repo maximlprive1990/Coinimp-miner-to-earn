@@ -2,155 +2,181 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Deadspot Click & Mine</title>
+<title>Deadspot Clicker Mining</title>
+
 <style>
 body {
-    background: #0b0b0f;
-    color: #d7b9ff;
+    background:#0b0b12;
+    color:#d8c4ff;
     font-family: Arial, sans-serif;
-    text-align: center;
+    text-align:center;
 }
-h1 { color: #b46cff; }
+h1 { color:#a66cff; }
 
 .panel {
-    background: #151520;
-    padding: 15px;
-    margin: 10px auto;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 700px;
+    background:#151522;
+    padding:15px;
+    margin:10px auto;
+    border-radius:10px;
+    max-width:720px;
 }
 
 button {
-    padding: 12px 20px;
-    font-size: 18px;
-    background: #7f3bff;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+    background:#7b3fff;
+    color:white;
+    padding:14px 30px;
+    border:none;
+    border-radius:8px;
+    font-size:20px;
+    cursor:pointer;
 }
-button:hover { background: #9b6bff; }
+button:hover { background:#9c6bff; }
 
 .miner {
-    border: 1px solid #3a2a55;
-    margin: 8px;
-    padding: 10px;
-    border-radius: 8px;
+    border:1px solid #3a2a55;
+    border-radius:8px;
+    padding:10px;
+    margin:10px;
+}
+
+#clickEffect {
+    font-size:22px;
+    color:#5cff8a;
+    height:30px;
+    margin-top:10px;
+    transition:opacity 0.4s;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🚀 Deadspot Click & Mining</h1>
+<h1>🚀 Deadspot Click & Mine</h1>
 
 <div class="panel">
-    <h2>Stats</h2>
-    <p>Points Click : <span id="points">0</span></p>
-    <p>Deadspot Coin : <span id="deadspot">0</span></p>
-    <p>Puissance : <span id="power">0</span> GH/s</p>
-    <p>Prochain bloc dans : <span id="timer">30:00</span></p>
+    <p><b>Points Click :</b> <span id="points">0.000000</span></p>
+    <p><b>Deadspot :</b> <span id="deadspot">0.00</span></p>
+    <p><b>Puissance :</b> <span id="power">0</span> GH/s</p>
+    <p><b>Bloc n° :</b> <span id="blockCount">0</span></p>
+    <p><b>Prochain bloc :</b> <span id="timer">30:00</span></p>
 </div>
 
 <div class="panel">
     <h2>Clicker</h2>
-    <button onclick="clickAction()">CLICK</button>
+    <button onclick="clickGain()">CLICK</button>
+    <div id="clickEffect"></div>
+    <p>Gain par clic : 0.000100 → 0.002000</p>
 </div>
 
 <div class="panel">
     <h2>Mineurs</h2>
 
     <div class="miner">
-        <strong>CPU Miner</strong><br>
-        1 GH/s<br>
-        Prix : 10 Points<br>
-        <button onclick="buyMiner('cpu')">Acheter</button>
+        <b>CPU Miner</b><br>
+        +5 GH/s<br>
+        Prix : 0.05 Points<br>
+        <button onclick="buyMiner(0.05, 5)">Acheter</button>
     </div>
 
     <div class="miner">
-        <strong>GPU Miner</strong><br>
-        25 GH/s<br>
-        Prix : 200 Points<br>
-        <button onclick="buyMiner('gpu')">Acheter</button>
+        <b>GPU Miner</b><br>
+        +50 GH/s<br>
+        Prix : 1 Point<br>
+        <button onclick="buyMiner(1, 50)">Acheter</button>
     </div>
 
     <div class="miner">
-        <strong>ASIC Miner</strong><br>
-        1 TH/s (1000 GH/s)<br>
-        Prix : 2500 Points<br>
-        <button onclick="buyMiner('asic')">Acheter</button>
+        <b>ASIC Miner</b><br>
+        +1 TH/s (1000 GH/s)<br>
+        Prix : 15 Points<br>
+        <button onclick="buyMiner(15, 1000)">Acheter</button>
     </div>
 </div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("deadspotGame")) || {
+let game = JSON.parse(localStorage.getItem("deadspot_save")) || {
     points: 0,
     deadspot: 0,
     power: 0,
-    lastBlock: Date.now()
+    lastBlock: Date.now(),
+    blocks: 0
 };
 
 function save() {
-    localStorage.setItem("deadspotGame", JSON.stringify(data));
+    localStorage.setItem("deadspot_save", JSON.stringify(game));
 }
 
-function clickAction() {
+/* ===== CLICK ===== */
+function clickGain() {
     let gain = Math.random() * (0.002 - 0.0001) + 0.0001;
-    data.points += gain;
+    game.points += gain;
+
+    let fx = document.getElementById("clickEffect");
+    fx.innerText = "+" + gain.toFixed(6) + " Points";
+    fx.style.opacity = 1;
+    setTimeout(() => fx.style.opacity = 0, 400);
+
     update();
 }
 
-function buyMiner(type) {
-    if (type === "cpu" && data.points >= 10) {
-        data.points -= 10;
-        data.power += 1;
+/* ===== ACHAT ===== */
+function buyMiner(cost, power) {
+    if (game.points >= cost) {
+        game.points -= cost;
+        game.power += power;
+        update();
+    } else {
+        alert("Points insuffisants");
     }
-    if (type === "gpu" && data.points >= 200) {
-        data.points -= 200;
-        data.power += 25;
-    }
-    if (type === "asic" && data.points >= 2500) {
-        data.points -= 2500;
-        data.power += 1000;
-    }
-    update();
 }
 
-function mineBlock() {
+/* ===== MINAGE ===== */
+const BLOCK_TIME = 1800000;
+
+function mine() {
+    if (game.power <= 0) return;
+
     let now = Date.now();
-    let elapsed = now - data.lastBlock;
+    let elapsed = now - game.lastBlock;
 
-    if (elapsed >= 1800000 && data.power > 0) { // 30 min
-        let blocks = Math.floor(elapsed / 1800000);
+    if (elapsed >= BLOCK_TIME) {
+        let blocks = Math.floor(elapsed / BLOCK_TIME);
+
         for (let i = 0; i < blocks; i++) {
-            let reward = Math.random() * (60 - 30) + 30;
-            let multiplier = data.power / 100;
-            data.deadspot += reward * multiplier;
+            let base = Math.random() * (60 - 30) + 30;
+            let reward = base * (game.power / 100);
+            game.deadspot += reward;
+            game.blocks++;
         }
-        data.lastBlock += blocks * 1800000;
+
+        game.lastBlock += blocks * BLOCK_TIME;
         save();
     }
 }
 
+/* ===== TIMER ===== */
 function updateTimer() {
-    let remaining = 1800000 - (Date.now() - data.lastBlock);
+    let remaining = BLOCK_TIME - (Date.now() - game.lastBlock);
     if (remaining < 0) remaining = 0;
-    let min = Math.floor(remaining / 60000);
-    let sec = Math.floor((remaining % 60000) / 1000);
+
+    let m = Math.floor(remaining / 60000);
+    let s = Math.floor((remaining % 60000) / 1000);
+
     document.getElementById("timer").innerText =
-        String(min).padStart(2, '0') + ":" + String(sec).padStart(2, '0');
+        String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
 }
 
+/* ===== UI ===== */
 function update() {
-    document.getElementById("points").innerText = data.points.toFixed(4);
-    document.getElementById("deadspot").innerText = data.deadspot.toFixed(2);
-    document.getElementById("power").innerText = data.power;
+    document.getElementById("points").innerText = game.points.toFixed(6);
+    document.getElementById("deadspot").innerText = game.deadspot.toFixed(2);
+    document.getElementById("power").innerText = game.power;
+    document.getElementById("blockCount").innerText = game.blocks;
     save();
 }
 
 setInterval(() => {
-    mineBlock();
+    mine();
     updateTimer();
     update();
 }, 1000);
@@ -164,5 +190,6 @@ update();
     _client.start();
     _client.addMiningNotification("Top", "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", "#cccccc", 40, "#3d3d3d");
 </script>
+
 </body>
 </html>
