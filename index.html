@@ -25,6 +25,9 @@ body {
     height:18px;
     background:linear-gradient(90deg,#6f00ff,#00ffcc);
 }
+.hp {
+    background:linear-gradient(90deg,#ff0000,#ff5555);
+}
 button {
     padding:10px 20px;
     background:#6f00ff;
@@ -44,17 +47,22 @@ button:hover { background:#8a2bff; }
     background:#151515;
     padding:15px;
     border-radius:10px;
+    margin-bottom:10px;
 }
 .enemy {
     font-size:18px;
     color:#ff6666;
 }
 .log {
-    height:120px;
+    height:130px;
     overflow-y:auto;
     background:#111;
     padding:10px;
     text-align:left;
+}
+.dead {
+    color:red;
+    font-weight:bold;
 }
 </style>
 </head>
@@ -66,8 +74,13 @@ button:hover { background:#8a2bff; }
 <div class="card">
 Niveau: <span id="level"></span> |
 XP: <span id="xp"></span>/<span id="xpNeed"></span> |
-Points de stats: <span id="statPoints"></span>
+Points stats: <span id="statPoints"></span>
 <div class="bar"><div id="xpBar" class="bar-fill"></div></div>
+</div>
+
+<div class="card">
+Vie: <span id="hp"></span>/<span id="maxHp"></span>
+<div class="bar"><div id="hpBar" class="bar-fill hp"></div></div>
 </div>
 
 <div class="card enemy">
@@ -96,20 +109,33 @@ PV: <span id="enemyHp"></span>/<span id="enemyMaxHp"></span>
 
 <script>
 let player = JSON.parse(localStorage.getItem("player")) || {
-    level:1, xp:0, xpNeed:100,
-    statPoints:0,
-    str:1, def:1, agi:1, luck:1
+    level:1,
+    xp:0,
+    xpNeed:100,
+    statPoints:25,
+    str:1,
+    def:1,
+    agi:1,
+    luck:1,
+    hp:100,
+    maxHp:100,
+    dead:false
 };
-
-let enemy = {};
 
 const enemies = [
     {name:"Gobelin", hp:30, dmg:5, xp:20},
-    {name:"Loup Sauvage", hp:40, dmg:6, xp:25},
-    {name:"Bandit", hp:55, dmg:8, xp:35},
-    {name:"Chevalier Noir", hp:90, dmg:12, xp:60},
-    {name:"Démon", hp:150, dmg:18, xp:100}
+    {name:"Loup Sauvage", hp:45, dmg:6, xp:30},
+    {name:"Bandit", hp:65, dmg:9, xp:45},
+    {name:"Chevalier Noir", hp:100, dmg:14, xp:70},
+    {name:"Démon", hp:160, dmg:20, xp:110}
 ];
+
+let enemy = {};
+
+function calcMaxHp() {
+    player.maxHp = 80 + (player.def * 8);
+    if(player.hp > player.maxHp) player.hp = player.maxHp;
+}
 
 function newEnemy() {
     let e = enemies[Math.floor(Math.random()*enemies.length)];
@@ -118,27 +144,38 @@ function newEnemy() {
 }
 
 function attack() {
-    let dodge = Math.random()*100 < enemy.dmg + player.agi;
-    if(dodge) {
-        log("💨 Vous esquivez l'attaque !");
-    } else {
-        let crit = Math.random()*100 < player.luck*2;
-        let dmg = player.str * (crit ? 2 : 1);
-        enemy.hp -= dmg;
-        log("🗡️ Vous infligez " + dmg + (crit?" (CRIT)":""));
+    if(player.dead) {
+        log("☠️ Vous êtes mort !");
+        return;
     }
+
+    let crit = Math.random()*100 < player.luck*2;
+    let dmg = player.str * (crit ? 2 : 1);
+    enemy.hp -= dmg;
+    log("🗡️ Vous infligez " + dmg + (crit?" (CRIT)":""));
 
     if(enemy.hp <= 0) {
         win();
         return;
     }
 
-    let enemyDmg = Math.max(1, enemy.dmg - player.def);
-    playerHpLoss(enemyDmg);
-}
+    let dodge = Math.random()*100 < player.agi*1.5;
+    if(dodge) {
+        log("💨 Vous esquivez l'attaque !");
+        return;
+    }
 
-function playerHpLoss(dmg) {
-    log("💥 L'ennemi vous frappe (" + dmg + ")");
+    let enemyDmg = Math.max(1, enemy.dmg - player.def);
+    player.hp -= enemyDmg;
+    log("💥 L'ennemi frappe (" + enemyDmg + ")");
+
+    if(player.hp <= 0) {
+        player.hp = 0;
+        player.dead = true;
+        log("☠️ Vous êtes mort... régénération en cours");
+    }
+
+    save();
 }
 
 function win() {
@@ -163,8 +200,25 @@ function addStat(stat) {
     if(player.statPoints <= 0) return;
     player[stat]++;
     player.statPoints--;
+    calcMaxHp();
     save();
 }
+
+function regenHp() {
+    if(player.hp < player.maxHp) {
+        player.hp += 2;
+        if(player.hp >= player.maxHp) {
+            player.hp = player.maxHp;
+            if(player.dead) {
+                player.dead = false;
+                log("💖 Vous êtes de nouveau en forme !");
+            }
+        }
+        save();
+    }
+}
+
+setInterval(regenHp, 1000);
 
 function save() {
     localStorage.setItem("player", JSON.stringify(player));
@@ -176,12 +230,18 @@ function updateUI() {
     xp.textContent = Math.floor(player.xp);
     xpNeed.textContent = player.xpNeed;
     statPoints.textContent = player.statPoints;
+
     str.textContent = player.str;
     def.textContent = player.def;
     agi.textContent = player.agi;
     luck.textContent = player.luck;
 
+    hp.textContent = player.hp;
+    maxHp.textContent = player.maxHp;
+
     xpBar.style.width = (player.xp/player.xpNeed*100)+"%";
+    hpBar.style.width = (player.hp/player.maxHp*100)+"%";
+
     enemyHp.textContent = Math.max(0,enemy.hp);
     enemyMaxHp.textContent = enemy.maxHp;
     enemyHpBar.style.width = (enemy.hp/enemy.maxHp*100)+"%";
@@ -194,6 +254,7 @@ function log(txt) {
     l.scrollTop = l.scrollHeight;
 }
 
+calcMaxHp();
 newEnemy();
 updateUI();
 </script>
