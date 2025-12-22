@@ -18,7 +18,7 @@ h1 { color:#a66cff; }
     padding:15px;
     margin:10px auto;
     border-radius:10px;
-    max-width:720px;
+    max-width:760px;
 }
 
 button {
@@ -27,16 +27,31 @@ button {
     padding:14px 30px;
     border:none;
     border-radius:8px;
-    font-size:20px;
+    font-size:18px;
     cursor:pointer;
 }
 button:hover { background:#9c6bff; }
 
-.miner {
+.miner, .upgrade {
     border:1px solid #3a2a55;
     border-radius:8px;
     padding:10px;
     margin:10px;
+}
+
+.bar {
+    width:100%;
+    height:20px;
+    background:#2b2140;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:5px;
+}
+.bar-fill {
+    height:100%;
+    background:#5cff8a;
+    width:100%;
+    transition:width 0.3s;
 }
 
 #clickEffect {
@@ -44,7 +59,6 @@ button:hover { background:#9c6bff; }
     color:#5cff8a;
     height:30px;
     margin-top:10px;
-    transition:opacity 0.4s;
 }
 </style>
 </head>
@@ -57,7 +71,7 @@ button:hover { background:#9c6bff; }
     <p><b>Points Click :</b> <span id="points">0.000000</span></p>
     <p><b>Deadspot :</b> <span id="deadspot">0.00</span></p>
     <p><b>Puissance :</b> <span id="power">0</span> GH/s</p>
-    <p><b>Bloc n° :</b> <span id="blockCount">0</span></p>
+    <p><b>Blocs minés :</b> <span id="blocks">0</span></p>
     <p><b>Prochain bloc :</b> <span id="timer">30:00</span></p>
 </div>
 
@@ -65,124 +79,165 @@ button:hover { background:#9c6bff; }
     <h2>Clicker</h2>
     <button onclick="clickGain()">CLICK</button>
     <div id="clickEffect"></div>
-    <p>Gain par clic : 0.000100 → 0.002000</p>
+
+    <p>Clics disponibles : <span id="clicks">0</span> / <span id="maxClicks">0</span></p>
+    <div class="bar">
+        <div class="bar-fill" id="clickBar"></div>
+    </div>
+
+    <p>Recharge : +1 clic / 3 secondes</p>
+</div>
+
+<div class="panel">
+    <h2>Upgrades de clic</h2>
+
+    <div class="upgrade">
+        <b>Double Click (x2)</b><br>
+        Prix : <span id="price2">1</span> Point<br>
+        <button onclick="buyUpgrade(2)">Acheter</button>
+    </div>
+
+    <div class="upgrade">
+        <b>Triple Click (x3)</b><br>
+        Prix : <span id="price3">5</span> Points<br>
+        <button onclick="buyUpgrade(3)">Acheter</button>
+    </div>
 </div>
 
 <div class="panel">
     <h2>Mineurs</h2>
 
     <div class="miner">
-        <b>CPU Miner</b><br>
-        +5 GH/s<br>
-        Prix : 0.05 Points<br>
-        <button onclick="buyMiner(0.05, 5)">Acheter</button>
+        CPU Miner – +5 GH/s – 0.05 Points
+        <br><button onclick="buyMiner(0.05,5)">Acheter</button>
     </div>
 
     <div class="miner">
-        <b>GPU Miner</b><br>
-        +50 GH/s<br>
-        Prix : 1 Point<br>
-        <button onclick="buyMiner(1, 50)">Acheter</button>
+        GPU Miner – +50 GH/s – 1 Point
+        <br><button onclick="buyMiner(1,50)">Acheter</button>
     </div>
 
     <div class="miner">
-        <b>ASIC Miner</b><br>
-        +1 TH/s (1000 GH/s)<br>
-        Prix : 15 Points<br>
-        <button onclick="buyMiner(15, 1000)">Acheter</button>
+        ASIC Miner – +1 TH/s – 15 Points
+        <br><button onclick="buyMiner(15,1000)">Acheter</button>
     </div>
 </div>
 
 <script>
 let game = JSON.parse(localStorage.getItem("deadspot_save")) || {
-    points: 0,
-    deadspot: 0,
-    power: 0,
-    lastBlock: Date.now(),
-    blocks: 0
+    points:0,
+    deadspot:0,
+    power:0,
+    blocks:0,
+    lastBlock:Date.now(),
+    multiplier:1,
+    clicks:20,
+    maxClicks:20,
+    price2:1,
+    price3:5
 };
 
-function save() {
-    localStorage.setItem("deadspot_save", JSON.stringify(game));
-}
+function save(){ localStorage.setItem("deadspot_save", JSON.stringify(game)); }
 
 /* ===== CLICK ===== */
-function clickGain() {
-    let gain = Math.random() * (0.002 - 0.0001) + 0.0001;
+function clickGain(){
+    if(game.clicks <= 0) return;
+
+    game.clicks--;
+
+    let base = Math.random()*(0.002-0.0001)+0.0001;
+    let gain = base * game.multiplier;
     game.points += gain;
 
     let fx = document.getElementById("clickEffect");
-    fx.innerText = "+" + gain.toFixed(6) + " Points";
-    fx.style.opacity = 1;
-    setTimeout(() => fx.style.opacity = 0, 400);
+    fx.innerText = "+"+gain.toFixed(6)+" Points (x"+game.multiplier+")";
 
     update();
 }
 
-/* ===== ACHAT ===== */
-function buyMiner(cost, power) {
-    if (game.points >= cost) {
+/* ===== RECHARGE CLICS ===== */
+setInterval(()=>{
+    if(game.clicks < game.maxClicks){
+        game.clicks++;
+        update();
+    }
+},3000);
+
+/* ===== UPGRADES ===== */
+function buyUpgrade(type){
+    if(type === 2 && game.points >= game.price2){
+        game.points -= game.price2;
+        game.multiplier *= 2;
+        game.price2 *= 2;
+    }
+    if(type === 3 && game.points >= game.price3){
+        game.points -= game.price3;
+        game.multiplier *= 3;
+        game.price3 *= 2.5;
+    }
+    update();
+}
+
+/* ===== MINEURS ===== */
+function buyMiner(cost,power){
+    if(game.points >= cost){
         game.points -= cost;
         game.power += power;
         update();
-    } else {
-        alert("Points insuffisants");
     }
 }
 
 /* ===== MINAGE ===== */
 const BLOCK_TIME = 1800000;
-
-function mine() {
-    if (game.power <= 0) return;
-
-    let now = Date.now();
-    let elapsed = now - game.lastBlock;
-
-    if (elapsed >= BLOCK_TIME) {
+function mine(){
+    let elapsed = Date.now() - game.lastBlock;
+    if(elapsed >= BLOCK_TIME && game.power > 0){
         let blocks = Math.floor(elapsed / BLOCK_TIME);
-
-        for (let i = 0; i < blocks; i++) {
-            let base = Math.random() * (60 - 30) + 30;
-            let reward = base * (game.power / 100);
+        for(let i=0;i<blocks;i++){
+            let reward = (Math.random()*30+30)*(game.power/100);
             game.deadspot += reward;
             game.blocks++;
         }
-
-        game.lastBlock += blocks * BLOCK_TIME;
-        save();
+        game.lastBlock += blocks*BLOCK_TIME;
     }
 }
 
 /* ===== TIMER ===== */
-function updateTimer() {
-    let remaining = BLOCK_TIME - (Date.now() - game.lastBlock);
-    if (remaining < 0) remaining = 0;
-
-    let m = Math.floor(remaining / 60000);
-    let s = Math.floor((remaining % 60000) / 1000);
-
+function updateTimer(){
+    let remain = BLOCK_TIME - (Date.now()-game.lastBlock);
+    if(remain<0) remain=0;
+    let m=Math.floor(remain/60000);
+    let s=Math.floor((remain%60000)/1000);
     document.getElementById("timer").innerText =
-        String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+        String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 }
 
 /* ===== UI ===== */
-function update() {
+function update(){
     document.getElementById("points").innerText = game.points.toFixed(6);
     document.getElementById("deadspot").innerText = game.deadspot.toFixed(2);
     document.getElementById("power").innerText = game.power;
-    document.getElementById("blockCount").innerText = game.blocks;
+    document.getElementById("blocks").innerText = game.blocks;
+    document.getElementById("clicks").innerText = game.clicks;
+    document.getElementById("maxClicks").innerText = game.maxClicks;
+    document.getElementById("price2").innerText = game.price2.toFixed(2);
+    document.getElementById("price3").innerText = game.price3.toFixed(2);
+
+    document.getElementById("clickBar").style.width =
+        (game.clicks/game.maxClicks*100)+"%";
+
     save();
 }
 
-setInterval(() => {
+setInterval(()=>{
     mine();
     updateTimer();
     update();
-}, 1000);
+},1000);
 
 update();
-
 </script>
+
 </body>
 </html>
+
