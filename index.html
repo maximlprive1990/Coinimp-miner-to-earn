@@ -2,83 +2,97 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Clicker Diamonds</title>
+<title>Diamond Clicker</title>
 <style>
-body {
-    background:#0b0b0b;
-    color:#e0e0e0;
+body{
+    background:#0a0a0a;
+    color:#eaeaea;
     font-family:Arial, sans-serif;
     text-align:center;
 }
-.container {
-    max-width:600px;
+.container{
+    max-width:620px;
     margin:auto;
     padding:20px;
 }
-.bar {
+h2{color:#9b6cff}
+
+.bar{
+    height:30px;
     background:#333;
     border-radius:12px;
-    height:30px;
-    margin:10px 0;
     overflow:hidden;
     cursor:pointer;
+    margin:10px 0;
 }
-.bar-fill {
-    background:linear-gradient(90deg,#6a00ff,#00ffcc);
+.bar-fill{
     height:100%;
+    background:linear-gradient(90deg,#7a00ff,#00ffd5);
     width:50%;
-    transition:width 0.2s;
+    transition:width 0.15s;
 }
-button {
-    background:#6a00ff;
+
+button{
+    background:#7a00ff;
     color:white;
     border:none;
-    padding:10px 15px;
-    margin:5px;
+    padding:10px 16px;
     border-radius:8px;
+    margin:5px;
     cursor:pointer;
 }
-button:disabled {
-    opacity:0.4;
-    cursor:not-allowed;
-}
-input {
-    padding:8px;
-    border-radius:6px;
-    border:none;
-    width:90%;
-}
-.section {
+button:disabled{opacity:0.4}
+
+.section{
     border:1px solid #333;
     border-radius:12px;
     padding:15px;
     margin-top:15px;
+}
+
+input{
+    padding:8px;
+    width:90%;
+    border-radius:6px;
+    border:none;
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-<h2>💎 Clicker Diamonds</h2>
+<h2>💎 Diamond Clicker</h2>
 
-<div>
-<b>Points de clic :</b> <span id="clickPts">500</span> /
-<span id="maxPts">1000</span>
+<div><b>Points de clic :</b> <span id="pts">500</span> / <span id="max">1000</span></div>
+
+<div class="bar" onclick="clickAction()">
+    <div class="bar-fill" id="bar"></div>
 </div>
 
-<div class="bar" onclick="doClick()">
-    <div class="bar-fill" id="barFill"></div>
-</div>
+<button onclick="clickAction()">CLICK</button>
 
-<div>
-<b>Diamonds :</b> <span id="diamonds">0</span>
+<div style="margin-top:10px">
+<b>Diamonds :</b> <span id="diamonds">0</span><br>
+<b>Multiplicateur :</b> x<span id="multi">1</span>
 </div>
 
 <div class="section">
 <h3>Améliorations</h3>
-<button onclick="upgradeMax()">+100 Max Click Pts<br>(coût : <span id="costMax">100</span> Diamonds)</button>
-<br>
-<button onclick="upgradeRegen()">+10 Regen / 10s<br>(coût : <span id="costRegen">250</span> Diamonds)</button>
+
+<button onclick="upgradeMax()">+100 Max Click Pts<br>
+(Coût <span id="costMax">100</span>)</button><br>
+
+<button onclick="upgradeRegen()">+10 Regen / 10s<br>
+(Coût <span id="costRegen">250</span>)</button><br>
+
+<button onclick="buyDouble()" id="doubleBtn">
+Double Click (x2)<br>(Coût 1000)
+</button><br>
+
+<button onclick="buyTriple()" id="tripleBtn">
+Triple Click (x3)<br>(Coût 5000)
+</button>
+
 </div>
 
 <div class="section">
@@ -87,92 +101,114 @@ input {
 <input id="email" placeholder="Email FaucetPay (Gmail)">
 <br><br>
 <button onclick="exchange()">Échanger</button>
-<p id="exchangeMsg"></p>
+<p id="msg"></p>
 </div>
 
 </div>
 
 <script>
-let clickPts = Number(localStorage.getItem("clickPts")) || 500;
+let pts = Number(localStorage.getItem("pts")) || 500;
 let maxPts = Number(localStorage.getItem("maxPts")) || 1000;
 let diamonds = Number(localStorage.getItem("diamonds")) || 0;
 
-let regenAmount = Number(localStorage.getItem("regenAmount")) || 10;
+let regen = Number(localStorage.getItem("regen")) || 10;
 
 let costMax = Number(localStorage.getItem("costMax")) || 100;
 let costRegen = Number(localStorage.getItem("costRegen")) || 250;
 
-function save() {
-    localStorage.setItem("clickPts", clickPts);
-    localStorage.setItem("maxPts", maxPts);
-    localStorage.setItem("diamonds", diamonds);
-    localStorage.setItem("regenAmount", regenAmount);
-    localStorage.setItem("costMax", costMax);
-    localStorage.setItem("costRegen", costRegen);
+let doubleClick = localStorage.getItem("doubleClick") === "true";
+let tripleClick = localStorage.getItem("tripleClick") === "true";
+
+function multiplier(){
+    let m = 1;
+    if(doubleClick) m += 1;
+    if(tripleClick) m += 2;
+    return m;
 }
 
-function updateUI() {
-    document.getElementById("clickPts").textContent = clickPts;
-    document.getElementById("maxPts").textContent = maxPts;
+function save(){
+    localStorage.setItem("pts",pts);
+    localStorage.setItem("maxPts",maxPts);
+    localStorage.setItem("diamonds",diamonds);
+    localStorage.setItem("regen",regen);
+    localStorage.setItem("costMax",costMax);
+    localStorage.setItem("costRegen",costRegen);
+    localStorage.setItem("doubleClick",doubleClick);
+    localStorage.setItem("tripleClick",tripleClick);
+}
+
+function update(){
+    document.getElementById("pts").textContent = pts;
+    document.getElementById("max").textContent = maxPts;
     document.getElementById("diamonds").textContent = diamonds;
+    document.getElementById("multi").textContent = multiplier();
     document.getElementById("costMax").textContent = costMax;
     document.getElementById("costRegen").textContent = costRegen;
-    document.getElementById("barFill").style.width =
-        (clickPts / maxPts * 100) + "%";
+    document.getElementById("bar").style.width = (pts/maxPts*100)+"%";
+
+    if(doubleClick) document.getElementById("doubleBtn").disabled = true;
+    if(tripleClick) document.getElementById("tripleBtn").disabled = true;
 }
 
-function doClick() {
-    if (clickPts <= 0) return;
-    clickPts--;
-    diamonds += 1;
+function clickAction(){
+    if(pts<=0) return;
+    pts--;
+    diamonds += multiplier();
     save();
-    updateUI();
+    update();
 }
 
-function upgradeMax() {
-    if (diamonds < costMax) return;
+function upgradeMax(){
+    if(diamonds<costMax) return;
     diamonds -= costMax;
     maxPts += 100;
-    costMax = Math.floor(costMax * 1.8);
-    save();
-    updateUI();
+    costMax = Math.floor(costMax*1.8);
+    save(); update();
 }
 
-function upgradeRegen() {
-    if (diamonds < costRegen) return;
+function upgradeRegen(){
+    if(diamonds<costRegen) return;
     diamonds -= costRegen;
-    regenAmount += 10;
-    costRegen = Math.floor(costRegen * 2);
-    save();
-    updateUI();
+    regen += 10;
+    costRegen = Math.floor(costRegen*2);
+    save(); update();
 }
 
-setInterval(() => {
-    clickPts = Math.min(maxPts, clickPts + regenAmount);
-    save();
-    updateUI();
-}, 10000);
+function buyDouble(){
+    if(diamonds<1000 || doubleClick) return;
+    diamonds -= 1000;
+    doubleClick = true;
+    save(); update();
+}
 
-function exchange() {
+function buyTriple(){
+    if(diamonds<5000 || tripleClick) return;
+    diamonds -= 5000;
+    tripleClick = true;
+    save(); update();
+}
+
+setInterval(()=>{
+    pts = Math.min(maxPts, pts + regen);
+    save(); update();
+},10000);
+
+function exchange(){
     let email = document.getElementById("email").value;
-    if (!email.includes("@")) {
-        document.getElementById("exchangeMsg").textContent =
-            "Email FaucetPay invalide.";
+    if(!email.includes("@")){
+        msg.textContent="Email FaucetPay invalide";
         return;
     }
-    if (diamonds < 1000000000) {
-        document.getElementById("exchangeMsg").textContent =
-            "Pas assez de Diamonds.";
+    if(diamonds<1000000000){
+        msg.textContent="Diamonds insuffisants";
         return;
     }
     diamonds -= 1000000000;
-    document.getElementById("exchangeMsg").textContent =
-        "Demande envoyée : 0.25 MATIC vers FaucetPay (" + email + ")";
-    save();
-    updateUI();
+    msg.textContent="Demande envoyée : 0.25 MATIC vers "+email;
+    save(); update();
 }
 
-updateUI();
+update();
 </script>
 
 
